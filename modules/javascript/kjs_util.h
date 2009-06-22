@@ -33,9 +33,11 @@ namespace kroll
 
 		static SharedValue Evaluate(JSContextRef context, char *script);
 		static SharedValue EvaluateFile(JSContextRef context, char *full_path);
+		static SharedValue EvaluateInNewContext(Host *host, SharedKObject properties,  SharedKObject global_properties, const char *script);
 
 		static JSValueRef GetFunctionPrototype(JSContextRef jsContext, JSValueRef* exception);
 		static JSValueRef GetArrayPrototype(JSContextRef jsContext, JSValueRef* exception);
+		
 
 	private:
 		static std::map<JSObjectRef, JSGlobalContextRef> contextMap;

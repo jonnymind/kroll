@@ -703,6 +703,97 @@ namespace kroll
 		return KJSUtil::ToKrollValue(return_value, context, global_object);
 	}
 
+	SharedValue KJSUtil::EvaluateInNewContext(Host *host, SharedKObject properties, SharedKObject global_properties, const char *script)
+	{
+		JSValueRef exception;
+		JSGlobalContextRef context = JSGlobalContextCreate(NULL);
+		JSObjectRef global_object = JSContextGetGlobalObject(context);
+		KJSUtil::RegisterGlobalContext(global_object, context);
+		
+		/* Take some steps to insert the API into the Javascript context */
+		/* Create a crazy, crunktown delegate hybrid object for Javascript */
+		SharedValue global_value = Value::NewObject(host->GetGlobalObject());
+		
+		// make a void ptr to the JSContext
+		SharedKObject go = global_value->ToObject();
+		go->Set("$js_context",Value::NewVoidPtr(context));
+					
+		
+		/* convert JS API to a KJS object */
+		JSValueRef js_api = KJSUtil::ToJSValue(global_value, context);
+		
+		/* set the API as a property of the global object */
+		JSStringRef prop_name = JSStringCreateWithUTF8CString(PRODUCT_NAME);
+		JSObjectSetProperty(context, global_object, prop_name,
+		                    js_api, kJSPropertyAttributeNone, NULL);
+		JSStringRelease(prop_name);
+		
+		/* set the global object top-level properties */
+		if (!properties.isNull())
+		{
+			properties->Set("$js_context",Value::NewVoidPtr(context));
+			
+			SharedKObject globalObj = global_value->ToObject();
+			SharedStringList list = properties->GetPropertyNames();
+			for (size_t i = 0; i < list->size(); i++)
+			{
+				SharedString name = list->at(i);
+				const char *n = (*name).c_str();
+				SharedValue value =	properties->Get(n);
+				globalObj->Set(n,value);
+			}
+		}
+		
+		Logger *logger = Logger::Get("KJSUtil");
+		
+		/* set any global properties */
+		if (!global_properties.isNull())
+		{
+			global_properties->Set("$js_context",Value::NewVoidPtr(context));
+			
+			SharedStringList list = global_properties->GetPropertyNames();
+			for (size_t i = 0; i < list->size(); i++)
+			{
+				SharedString name = list->at(i);
+				const char *n = (*name).c_str();
+
+				logger->Debug(">>>> binding %s", n);
+				
+				SharedValue value =	global_properties->Get(n);
+				JSStringRef prop_name = JSStringCreateWithUTF8CString(n);
+				JSValueRef value_ref = KJSUtil::ToJSValue(value, context);
+				JSObjectSetProperty(context, global_object, prop_name,
+				                    value_ref, kJSPropertyAttributeNone, NULL);
+				JSStringRelease(prop_name);
+			}
+		}
+		
+		/* Try to run the script */
+		JSStringRef js_code = JSStringCreateWithUTF8CString(script);
+		
+		/* check script syntax */
+		bool syntax = JSCheckScriptSyntax(context, js_code, NULL, 0, &exception);
+		if (!syntax)
+		{
+			SharedValue e = KJSUtil::ToKrollValue(exception, context, NULL);
+			throw ValueException(e);
+		}
+		
+		/* evaluate the script */
+		JSValueRef ret = JSEvaluateScript(context, js_code,
+		                                  NULL, NULL,
+		                                  1, &exception);
+		JSStringRelease(js_code);
+		
+		if (ret == NULL)
+		{
+			SharedValue e = KJSUtil::ToKrollValue(exception, context, NULL);
+			throw ValueException(e);
+		}
+		
+		return ToKrollValue(js_api, context, global_object);
+	}
+
 	//===========================================================================//
 	// METHODS BORROWED ARE TAKEN FROM GWT - modifications under same license
 	//===========================================================================//
@@ -793,4 +884,5 @@ namespace kroll
 
 		return fnPrototype;
 	}
+
 }

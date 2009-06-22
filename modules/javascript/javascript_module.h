@@ -34,6 +34,8 @@ namespace kroll {
 	class JavascriptModuleInstance;
 }
 #include "javascript_module_instance.h"
+#include "javascript_evaluator.h"
+#include "javascript_worker.h"
 
 namespace kroll
 {
@@ -59,6 +61,8 @@ namespace kroll
 
 	private:
 		static JavascriptModule *instance;
+		SharedKObject binding;
+		DISALLOW_EVIL_CONSTRUCTORS(JavascriptModule);
 	};
 }
 

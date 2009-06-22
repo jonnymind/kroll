@@ -17,10 +17,34 @@ namespace kroll
 	{
 		JavascriptModule::instance = this;
 		host->AddModuleProvider(this);
+
+		SharedKObject global = this->host->GetGlobalObject();
+		this->binding = new StaticBoundObject();
+		global->Set("Javascript", Value::NewObject(this->binding));
+
+		SharedKMethod evaluator = new JavascriptEvaluator();
+		/**
+		 * @tiapi(method=True,name=Javascript.evaluate,since=0.5) Evaluates a string as javascript code
+		 * @tiarg(for=Javascript.evaluate,name=code,type=string) javascript code
+		 * @tiarg(for=Javascript.evaluate,name=scope,type=object) global variable scope
+		 * @tiresult(for=Javascript.evaluate,type=object) the result of the evaluation
+		 */
+		this->binding->Set("evaluate", Value::NewMethod(evaluator));
+
+		SharedKMethod evaluateAsync = new JavascriptWorker(this->host);
+		/**
+		 * @tiapi(method=True,name=Javascript.evaluateInNewContext,since=0.5) Evaluates a piece of javascript code in a new JS context
+		 * @tiarg(for=Javascript.evaluateInNewContext,name=code,type=any) javascript function or string URL
+		 * @tiarg(for=Javascript.evaluateInNewContext,name=module_properties,type=object) top-level module properties
+		 * @tiarg(for=Javascript.evaluateInNewContext,name=global_properties,type=object) top-level global properties
+		 * @tiresult(for=Javascript.evaluateInNewContext,type=object) the result of the evaluation
+		 */
+		this->binding->Set("evaluateInNewContext", Value::NewMethod(evaluateAsync));
 	}
 
 	void JavascriptModule::Stop()
 	{
+		binding = NULL;
 		JavascriptModule::instance = NULL;
 	}
 

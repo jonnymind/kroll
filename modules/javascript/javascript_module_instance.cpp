@@ -52,44 +52,7 @@ namespace kroll
 
 	void JavascriptModuleInstance::Run()
 	{
-
-		JSValueRef exception;
-		JSGlobalContextRef context = JSGlobalContextCreate(NULL);
-		JSObjectRef global_object = JSContextGetGlobalObject(context);
-		KJSUtil::RegisterGlobalContext(global_object, context);
-
-		/* Take some steps to insert the API into the Javascript context */
-		/* Create a crazy, crunktown delegate hybrid object for Javascript */
-		SharedValue global_value = Value::NewObject(host->GetGlobalObject());
-
-		/* convert JS API to a KJS object */
-		JSValueRef js_api = KJSUtil::ToJSValue(global_value, context);
-
-		/* set the API as a property of the global object */
-		JSStringRef prop_name = JSStringCreateWithUTF8CString(PRODUCT_NAME);
-		JSObjectSetProperty(context, global_object, prop_name,
-		                    js_api, kJSPropertyAttributeNone, NULL);
-
-		/* Try to run the script */
-		JSStringRef js_code = JSStringCreateWithUTF8CString(this->code.c_str());
-
-		/* check script syntax */
-		bool syntax = JSCheckScriptSyntax(context, js_code, NULL, 0, &exception);
-		if (!syntax)
-		{
-			SharedValue e = KJSUtil::ToKrollValue(exception, context, NULL);
-			throw ValueException(e);
-		}
-
-		/* evaluate the script */
-		JSValueRef ret = JSEvaluateScript(context, js_code,
-		                                  NULL, NULL,
-		                                  1, &exception);
-		if (ret == NULL)
-		{
-			SharedValue e = KJSUtil::ToKrollValue(exception, context, NULL);
-			throw ValueException(e);
-		}
+		KJSUtil::EvaluateInNewContext(host,SharedKObject(NULL),SharedKObject(NULL),this->code.c_str());
 		
 		// null it out so we don't hold a bunch of this in memory
 		this->code = "";
