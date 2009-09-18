@@ -1,0 +1,4 @@
+name: falcon
+version: 0.1
+description: Falcon module
+os: linux, win32, osx
