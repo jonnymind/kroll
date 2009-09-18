@@ -22,13 +22,13 @@ Currently, Kroll supports the following languages:
 - Ruby
 - PHP
 - JavaScript
+- Falcon
 
 However, any C/C++ exposed language which supports embedding most likely
 can be supported with not much effort. These languages are on the 
 target list to be added soon:
 
 - Lua  (already in progress)
-- Falcon (interest from Falcon community indicated)
 - C# (maybe via Mono)
 - Java 
 
