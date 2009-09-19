@@ -13,8 +13,7 @@ if build.is_osx():
     pass
 
 elif build.is_linux():
-	# TODO
-    pass
+    Env.Append(LIBS=['falcon_engine'])
 
 elif build.is_win32():
 	# TODO

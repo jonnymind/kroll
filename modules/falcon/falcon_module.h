@@ -7,13 +7,14 @@
 #define _FALCON_MODULE_H
 
 #include <kroll/kroll.h>
+#include <falcon/engine.h>
 
 #include "falcon_api.h"
 #include "falcon_evaluator.h"
 
 namespace kroll
 {
-    class FalconModule : public Module, public ModuleProvider
+	class FalconModule : public Module, public ModuleProvider
 	{
 		KROLL_MODULE_CLASS(FalconModule)
 

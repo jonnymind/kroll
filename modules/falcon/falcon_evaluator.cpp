@@ -50,9 +50,9 @@ namespace kroll
 		std::string code = args.GetString(2);
 		//SharedKObject windowGlobal = args.GetObject(3);
 
-        // TODO: evaluate the code here
+		// TODO: evaluate the code here
 
-        // TODO: return value from evaluated code goes here
+		// TODO: return value from evaluated code goes here
 		result->SetNull();
 	}
 }

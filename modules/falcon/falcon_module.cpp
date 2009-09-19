@@ -7,7 +7,7 @@
 
 namespace kroll
 {
-    KROLL_MODULE(FalconModule, STRING(MODULE_NAME), STRING(MODULE_VERSION));
+	KROLL_MODULE(FalconModule, STRING(MODULE_NAME), STRING(MODULE_VERSION));
 
 	FalconModule* FalconModule::instance_ = NULL;
 
@@ -15,7 +15,7 @@ namespace kroll
 	{
 		FalconModule::instance_ = this;
 
-        // TODO: initialize vm here
+		// TODO: initialize vm here
 
 		this->InitializeBinding();
 		host->AddModuleProvider(this);
@@ -34,19 +34,18 @@ namespace kroll
 		Script::GetInstance()->AddScriptEvaluator(this->binding);
 	}
 
-
 	const static std::string falcon_suffix = "module.fal";
 
 	bool FalconModule::IsModule(std::string& path)
 	{
-        // TODO: re-enable this once we have module loading done
-        return false;
+		// TODO: re-enable this once we have module loading done
+		return false;
 		//return (path.substr(path.length()-falcon_suffix.length()) == falcon_suffix);
 	}
 
 	Module* FalconModule::CreateModule(std::string& path)
 	{
-        // TODO: falcon module loading (this can wait until later)
+		// TODO: falcon module loading (this can wait until later)
 		return 0;
 	}
 
