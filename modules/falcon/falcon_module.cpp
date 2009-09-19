@@ -15,7 +15,10 @@ namespace kroll
 	{
 		FalconModule::instance_ = this;
 
-		// TODO: initialize vm here
+		Falcon::Engine::Init();
+		// The Falcon search path is an added path global for the whole engine.
+		// It is also propagated to scripts on their request.
+		Falcon::Engine::setSearchPath( host->GetApplication()->GetResourcesPath().c_str());
 
 		this->InitializeBinding();
 		host->AddModuleProvider(this);
@@ -23,7 +26,13 @@ namespace kroll
 
 	void FalconModule::Stop()
 	{
-		// TODO: do VM shutdown / cleanup here
+		SharedKObject global = this->host->GetGlobalObject();
+		global->Set("Falcon", Value::Undefined);
+		Script::GetInstance()->RemoveScriptEvaluator(this->binding);
+		this->binding = NULL;
+		FalconModule::instance_ = NULL;
+
+		Falcon::Engine::Shutdown();
 	}
 
 	void FalconModule::InitializeBinding()
@@ -45,8 +54,40 @@ namespace kroll
 
 	Module* FalconModule::CreateModule(std::string& path)
 	{
-		// TODO: falcon module loading (this can wait until later)
-		return 0;
+        return 0;
+        // TODO: for not leave this disabled
+		/*Logger *logger = Logger::Get("Falcon");
+
+		// run the main code of the module -- why?
+		try {
+			Falcon::ModuleLoader ml(".");
+			ml.addFalconPath();
+			ml.addSearchPath( Falcon::Engine::getSearchPath() );
+
+			Falcon::Runtime rt( &ml );
+			rt.loadFile( path.c_str() );
+
+			Falcon::VMachineWrapper vm;
+			vm->link( &rt );
+			vm->launch();
+		}
+		catch( Falcon::Error *errc )
+		{
+			Falcon::AutoCString err( errc->toString() );
+			logger->Error("Error loading Falcon path=%s\n%s", path.c_str(), err.c_str() );
+			errc->decref();
+			return 0;
+		}
+
+		Poco::Path p( path );
+		std::string basename = p.getBaseName();
+		std::string name = basename.substr(0,basename.length()-falcon_suffix.length()+3);
+		std::string moduledir = path.substr(0,path.length()-basename.length()-3);
+
+		logger->Info("Loading Falcon path=%s", path.c_str());
+
+		return new FalconModuleInstance(host, path, moduledir, name);
+        */
 	}
 
 }

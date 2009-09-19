@@ -9,15 +9,19 @@ Env.Append(CPPDEFINES=('KROLL_FALCON_API_EXPORT', 1))
 build.add_thirdparty(Env, 'poco')
 
 if build.is_osx():
-	# TODO
-    pass
+	Env.Append(CPPPATH=['/usr/lib', '/usr/include'])
+	Env.Append(LIBS=['falcon_engine'])
 
 elif build.is_linux():
-    Env.Append(LIBS=['falcon_engine'])
+	Env.Append(LIBS=['falcon_engine'])
 
 elif build.is_win32():
-	# TODO
-    pass
+	falcon_inc = os.environ['FALCON_INC_DIR']
+	falcon_lib = os.environ['FALCON_LIB_DIR']
+	Env.Append(CPPPATH=[falcon_lib,build.kroll_include_dir])
+	Env.Append(LIBPATH=[falcon_lib])
+	Env.Append(LIBS=['falcon_engine'])
+	Env.Append(CCFLAGS = ['/MD'])
 
 m = build.add_module('falcon', env=Env)
 t = Env.SharedLibrary(m.build_dir + '/falconmodule', Glob('*.cpp'))
