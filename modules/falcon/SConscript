@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+import os, sys, inspect, utils
+from os import path
+
+Import('build')
+
+Env = build.env.Clone()
+Env.Append(CPPDEFINES=('KROLL_FALCON_API_EXPORT', 1))
+build.add_thirdparty(Env, 'poco')
+
+if build.is_osx():
+	Env.Append(CPPPATH=['/usr/lib', '/usr/include'])
+	Env.Append(LIBS=['falcon_engine'])
+
+elif build.is_linux():
+	Env.Append(CPPPATH=[
+		'/usr/lib',
+		'/usr/include',
+		build.kroll_include_dir])
+	Env.Append(LIBS=['falcon_engine'])
+
+elif build.is_win32():
+	falcon_inc = os.environ['FALCON_INC_DIR']
+	falcon_lib = os.environ['FALCON_LIB_DIR']
+	Env.Append(CPPPATH=[falcon_lib,build.kroll_include_dir])
+	Env.Append(LIBPATH=[falcon_lib])
+	Env.Append(LIBS=['falcon_engine'])
+	Env.Append(CCFLAGS = ['/MD'])
+
+m = build.add_module('falcon', env=Env)
+t = Env.SharedLibrary(m.build_dir + '/falconmodule', Glob('*.cpp'))
+build.mark_build_target(t)
+
+if build.is_win32():
+	m.light_weight_copy('#falcon-win32-resources', build.tp('falcon'), m.build_dir)
