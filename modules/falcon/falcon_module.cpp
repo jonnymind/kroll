@@ -26,13 +26,22 @@ namespace kroll
 
 	void FalconModule::Stop()
 	{
+		Logger *logger = Logger::Get("Falcon");
+		logger->Debug( "Stopping Falcon module" );
+
+		
 		SharedKObject global = this->host->GetGlobalObject();
 		global->Set("Falcon", Value::Undefined);
+		logger->Debug( "Binding count at cleanup: %d", this->binding->referenceCount() );
 		Script::GetInstance()->RemoveScriptEvaluator(this->binding);
 		this->binding = NULL;
 		FalconModule::instance_ = NULL;
 
+		logger->Debug( "Performing last GC cleanup" );
+		Falcon::memPool->performGC();
+		logger->Debug( "Performing engine shutdown" );
 		Falcon::Engine::Shutdown();
+		logger->Debug( "Shutdown complete" );
 	}
 
 	void FalconModule::InitializeBinding()

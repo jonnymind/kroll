@@ -6,14 +6,23 @@
 #ifndef FALCON_EVALUATOR_H_
 #define FALCON_EVALUATOR_H_
 
+#include <falcon/intcomp.h>
+#include <falcon/vm.h>
+
 namespace kroll
 {
 	class FalconEvaluator : public StaticBoundObject
 	{
 	public:
 		FalconEvaluator();
+		virtual ~FalconEvaluator();
 		void Evaluate(const ValueList& args, SharedValue result);
 		void CanEvaluate(const ValueList& args, SharedValue result);
+
+	private:
+		Falcon::InteractiveCompiler* m_intcomp;
+		Falcon::VMachine* m_vm;
+		Falcon::ModuleLoader* m_loader;
 	};
 }
 
