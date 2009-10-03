@@ -75,6 +75,98 @@ namespace Falcon
 // Module declaration
 //===================================================
 
+
+//=====================================================
+// Falcon side of the KMethod implementation
+//
+// This allows falcon script to access remote KMethod
+// instances as wrapped in a falcon class.
+//=====================================================
+
+	class FKMethod: public CoreObject
+	{
+	public:
+		FKMethod( const CoreClass* cls, kroll::SharedValue data ):
+			CoreObject( cls ),
+			m_data( data )
+		{}
+
+		FKMethod( const FKMethod& other ):
+			CoreObject( other ),
+			m_data( other.m_data )
+		{}
+
+		virtual ~FKMethod() {}
+
+		virtual bool hasProperty( const String &key ) const
+		{
+			AutoCString ckey( key );
+			return m_data->ToMethod()->HasProperty( ckey.c_str() );
+		}
+
+		virtual bool setProperty( const String &prop, const Item &value )
+		{
+			AutoCString ckey( prop );
+			kroll::SharedValue v = kroll::FalconUtils::ToKrollValue( value );
+			// In case of problems, this should fire an application specific exception.
+			m_data->ToMethod()->Set( ckey.c_str(), v );
+
+			return true;
+		}
+
+		virtual bool getProperty( const String &key, Item &ret ) const
+		{
+			// prepare a callable method for this method.
+			if ( key == "call__" )
+			{
+				return defaultProperty( key, ret );
+			}
+			
+			AutoCString ckey( key );
+			// In case of problems, this should fire an application specific exception
+			kroll::SharedValue v = m_data->ToMethod()->Get( ckey.c_str() );
+			kroll::FalconUtils::ToFalconItem( v, ret );
+			return true;
+		}
+
+		virtual CoreObject *clone() const
+		{
+			return new FKMethod( *this );
+		}
+
+		void call( VMachine* vm )
+		{
+			ArgList args;
+			
+			for( Falcon::uint32 pc = 0; vm->paramCount(); ++pc )
+			{
+				args.push_back( FalconUtils::ToKrollValue( *vm->param(pc) ) );
+			}
+
+			m_data->ToMethod()->Call( args );
+		}
+		
+	private:
+		kroll::SharedValue m_data;
+	};
+
+	CoreObject* KMethod_factory( const CoreClass* generator, void* data, bool )
+	{
+		kroll::SharedValue* vdata = (kroll::SharedValue*) data;
+		return new FKMethod( generator, *vdata );
+	}
+
+	static void kmethod_call( Falcon::VMachine* vm )
+	{
+		// get the KRoll method
+		FKMethod* self = Falcon::dyncast<FKMethod*>(vm->self().asObject());
+		self->call( vm );
+	}
+
+//===================================================
+// Module declaration
+//===================================================
+
 	Module* krollGlueModule()
 	{
 		Module *self = new Module();
@@ -91,7 +183,13 @@ namespace Falcon
 		cls_kobject->getClassDef()->factory( &KObject_factory );
 		cls_kobject->setWKS( true );
 		// we don't add any standard property; all done via set/get/hasProperty.
-		
+
+		Symbol* cls_kmethod = self->addClass( FALCON_KMETHOD_CLASS_NAME );
+		cls_kmethod->getClassDef()->factory( &KObject_factory );
+		cls_kmethod->setWKS( true );
+		// allow the KMethod object to be seen as a functor:
+		self->addClassMethod( cls_kmethod, "call__", &kmethod_call );
+
 		return self;
 	}
 

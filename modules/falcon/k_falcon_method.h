@@ -22,6 +22,9 @@ namespace kroll
 		virtual SharedValue Get(const char *name);
 		virtual SharedStringList GetPropertyNames();
 
+		Falcon::Item& ToFalcon() { return m_glMethod->item(); }
+		const Falcon::Item& ToFalcon() const { return m_glMethod->item(); }
+		
 	public:
 		Falcon::GarbageLock* m_glMethod;
 	};
