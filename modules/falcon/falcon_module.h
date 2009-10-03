@@ -11,6 +11,9 @@
 
 #include "falcon_api.h"
 #include "falcon_evaluator.h"
+#include "k_falcon_object.h"
+#include "falcon_utils.h"
+#include "falcon_glue_module.h"
 
 namespace kroll
 {

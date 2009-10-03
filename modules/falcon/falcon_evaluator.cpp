@@ -33,6 +33,9 @@ namespace kroll
 
 		// Put in the standard module.
 		m_vm->link( Falcon::core_module_init() );
+
+		// Put in the Kroll-glue module
+		m_vm->link( Falcon::krollGlueModule() );
 		
 		// Create a module loader using the default engine path settings
 		m_loader = new Falcon::ModuleLoader( "." );

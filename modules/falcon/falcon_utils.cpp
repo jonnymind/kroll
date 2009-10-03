@@ -43,7 +43,17 @@ void FalconUtils::ToFalconItem( const SharedValue& value, Falcon::Item& item )
 	}
 	else if (value->IsObject())
 	{
-		// TODO
+		AutoPtr<KFalconObject> kfo = value.cast<KFalconObject>();
+		if ( ! kfo.isNull() )
+		{
+			item = kfo->ToFalcon();
+		}
+		else
+		{
+			// TODO
+			// it's another Kroll object; we must wrap it in a Falcon-Kroll object
+			item.setNil();
+		}
 	}
 	else if (value->IsMethod())
 	{
