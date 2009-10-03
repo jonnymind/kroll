@@ -17,7 +17,10 @@ namespace kroll
 		static SharedValue ToKrollValue(const Falcon::Item& value);
 
 		/** Using an item passed by ref, we can often spare a useless copy operation. */
-		static void ToFalconItem( const SharedValue& value, Falcon::Item& item );
+		static void ToFalconItem( SharedValue value, Falcon::Item& item );
+
+			/** Throws a ValueError extracting and dereferencing the Falcon Error. */
+		static void ManageError( Falcon::Error* e );
 	};
 }
 

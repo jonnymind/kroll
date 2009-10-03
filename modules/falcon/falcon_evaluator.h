@@ -21,8 +21,11 @@ namespace kroll
 
 	private:
 		Falcon::InteractiveCompiler* m_intcomp;
-		Falcon::VMachine* m_vm;
+		KVMachine* m_vm;
 		Falcon::ModuleLoader* m_loader;
+		
+		// not necessary, but useful for performance.
+		Falcon::GarbageLock* m_kobj_class;
 	};
 }
 

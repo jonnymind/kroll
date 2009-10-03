@@ -8,7 +8,6 @@
 
 namespace kroll {
 
-
 	KFalconObject::KFalconObject( Falcon::CoreObject* co ):
 		m_co( co )
 	{
@@ -30,7 +29,7 @@ namespace kroll {
 		}
 		catch( Falcon::Error *e )
 		{
-			ManageError( e );
+			FalconUtils::ManageError( e );
 		}
 	}
 	
@@ -43,7 +42,7 @@ namespace kroll {
 		}
 		catch( Falcon::Error *e )
 		{
-			ManageError( e );
+			FalconUtils::ManageError( e );
 		}
 		
 		// putting the return out of the catch to make the compiler happy:
@@ -74,14 +73,6 @@ namespace kroll {
 			return false;
 
 		return this->ToFalcon() == falconOther->ToFalcon();
-	}
-
-	void KFalconObject::ManageError( Falcon::Error* e )
-	{
-			Falcon::AutoCString desc( e->toString() );
-			ValueException ve = ValueException::FromString( desc.c_str() ); // actually to UTF8
-			e->decref();
-			throw ve;
 	}
 
 }

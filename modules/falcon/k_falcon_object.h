@@ -9,6 +9,11 @@
 
 namespace kroll {
 
+/** Kroll-side falcon object reflection.
+
+	This Kroll class wrap a generic Falcon::CoreObject
+	and exposes to Kroll the falcon object functionalities.
+*/
 class KFalconObject : public KObject {
 public:
 	KFalconObject( Falcon::CoreObject* co );
@@ -39,9 +44,6 @@ public:
 private:
 	Falcon::CoreObject* m_co;
 	Falcon::GarbageLock* m_gl;
-
-	/** Throws a ValueError extracting and dereferencing the Falcon Error */
-	void ManageError( Falcon::Error* e );
 };
 
 }

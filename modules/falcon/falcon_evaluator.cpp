@@ -6,8 +6,11 @@
 
 #include "falcon_module.h"
 
+#include <cassert>
+
 namespace kroll
 {
+	
 	FalconEvaluator::FalconEvaluator()
 		: StaticBoundObject("Falcon")
 	{
@@ -29,13 +32,22 @@ namespace kroll
 		SetMethod("evaluate", &FalconEvaluator::Evaluate);
 
 		// create the virtual machine.
-		m_vm = new Falcon::VMachine;
+		m_vm = new KVMachine;
 
 		// Put in the standard module.
 		m_vm->link( Falcon::core_module_init() );
 
 		// Put in the Kroll-glue module
 		m_vm->link( Falcon::krollGlueModule() );
+
+		// we're gonna have just one VM in this system, so..
+		
+
+		// get our KObject class instance, so that we can use it later on.
+		Falcon::Item* kobj_cls= m_vm->findWKI( FALCON_KOBJECT_CLASS_NAME );
+		assert( kobj_cls != 0 );
+		m_kobj_class = new Falcon::GarbageLock( *kobj_cls );
+		
 		
 		// Create a module loader using the default engine path settings
 		m_loader = new Falcon::ModuleLoader( "." );
