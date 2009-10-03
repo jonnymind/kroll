@@ -10,6 +10,7 @@
 #define FALCON_KROLL_GLUE_MODULE_VERSION 	0x000100
 #define FALCON_KOBJECT_CLASS_NAME 			"%KObject"
 #define FALCON_KMETHOD_CLASS_NAME 			"%KMethod"
+#define FALCON_KLIST_CLASS_NAME				"%KList"
 
 namespace Falcon
 {

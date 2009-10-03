@@ -13,6 +13,7 @@
 #include "falcon_kvm.h"
 #include "falcon_evaluator.h"
 #include "falcon_glue_module.h"
+#include "k_falcon_list.h"
 #include "k_falcon_object.h"
 #include "k_falcon_method.h"
 #include "falcon_utils.h"

@@ -30,6 +30,7 @@ namespace kroll
 				return Value::NewString( cstr.c_str() ); // actually, transfroms to UTF8
 			}
 
+			case FLC_ITEM_ARRAY: return Value::NewObject( new KFalconList( item.asArray() ) );
 			case FLC_ITEM_OBJECT: return Value::NewObject( new KFalconObject( item.asObjectSafe() ) );
 			case FLC_ITEM_METHOD: return Value::NewMethod( new KFalconMethod( item ) );
 		}
@@ -85,17 +86,18 @@ namespace kroll
 		}
 		else if (value->IsList())
 		{
-			KList* lin = value->ToList();
-			Falcon::CoreArray* ca = new Falcon::CoreArray( lin->Size() );
-
-			for( unsigned int i = 0; i < lin->Size(); ++i )
+			AutoPtr<KFalconList> kfl = value.cast<KFalconList>();
+			if ( ! kfl.isNull() )
 			{
-				Falcon::Item temp;
-				ToFalconItem( lin->At(i), temp );
-				ca->append( temp );
+				item = kfl->ToFalcon();
 			}
-
-			item = ca;
+			else
+			{
+				// TODO: use the pre-fetched instance saved int the Kroll FalconEvaluator instance.
+				Falcon::VMachine* cvm = Falcon::VMachine::getCurrent();
+				Falcon::Item* cls = cvm->findWKI( FALCON_KLIST_CLASS_NAME );
+				item = cls->asClass()->createInstance( &value );
+			}
 		}
 		else
 			item.setNil();

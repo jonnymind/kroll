@@ -71,11 +71,6 @@ namespace Falcon
 		return new FKObject( generator, *vdata );
 	}
 
-//===================================================
-// Module declaration
-//===================================================
-
-
 //=====================================================
 // Falcon side of the KMethod implementation
 //
@@ -163,6 +158,156 @@ namespace Falcon
 		self->call( vm );
 	}
 
+//=====================================================
+// Falcon side of the KList implementation
+//
+// This allows falcon script to access remote KList
+// instances as wrapped in a falcon class.
+//=====================================================
+
+	
+	class FKList: public CoreObject
+	{
+	public:
+		FKList( const CoreClass* cls, kroll::SharedValue data ):
+			CoreObject( cls ),
+			m_data( data )
+		{}
+
+		FKList( const FKList& other ):
+			CoreObject( other ),
+			m_data( other.m_data )
+		{}
+
+		virtual ~FKList() {}
+
+		bool hasProperty( const String &key ) const
+		{
+			uint32 pos = 0;
+			return generator()->properties().findKey(key, pos);
+		}
+
+		bool setProperty( const String &prop, const Item &value )
+		{
+			return false;
+		}
+
+		bool getProperty( const String &key, Item &ret ) const
+		{
+			return defaultProperty( key, ret );
+		}
+
+		virtual CoreObject *clone() const
+		{
+			return new FKList( *this );
+		}
+
+		kroll::KList* klist() const { return m_data->ToList(); }
+
+		private:
+			kroll::SharedValue m_data;
+	};
+
+	CoreObject* FKList_factory( const CoreClass* generator, void* data, bool )
+	{
+		kroll::SharedValue* vdata = (kroll::SharedValue*) data;
+		return new FKList( generator, *vdata );
+	}
+
+	static void FKList_At( Falcon::VMachine* vm )
+	{
+		// check parameters
+		Falcon::Item* i_index = vm->param( 0 );
+		
+		if( i_index == 0 || ! i_index->isOrdinal() )
+		{
+			throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+				.extra( "N" ) );
+		}
+		
+		// get the KRoll method
+		FKList* self = Falcon::dyncast<FKList*>(vm->self().asObject());
+		KList* list = self->klist();
+
+		// get the item and return it in A
+		FalconUtils::ToFalconItem( list->At( (unsigned int) i_index->forceInteger() ), vm->regA() );
+	}
+
+	static void FKList_SetAt( Falcon::VMachine* vm )
+	{
+		// check parameters
+		Falcon::Item* i_index = vm->param( 0 );
+		Falcon::Item* i_value = vm->param( 1 );
+
+		if( i_index == 0 || ! i_index->isOrdinal() || i_value == 0 )
+		{
+			throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+				.extra( "N,X" ) );
+		}
+
+		// get the KRoll method
+		FKList* self = Falcon::dyncast<FKList*>(vm->self().asObject());
+		KList* list = self->klist();
+
+		Falcon::int64 index = i_index->forceInteger();
+		if( index < 0 || index >= (Falcon::int64) list->Size() )
+		{
+			throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_param_range, __LINE__ ) );
+		}
+		
+		// get the item and return it in A
+		list->SetAt( (unsigned int) index, FalconUtils::ToKrollValue( *i_value ) );
+	}
+
+	static void FKList_Size( Falcon::VMachine* vm )
+	{
+		// get the KRoll method
+		FKList* self = Falcon::dyncast<FKList*>(vm->self().asObject());
+		KList* list = self->klist();
+		vm->retval( (Falcon::int64) list->Size() );
+	}
+
+	static void FKList_Append( Falcon::VMachine* vm )
+	{
+		// check parameters
+		Falcon::Item* i_value = vm->param( 0 );
+
+		if( i_value == 0 )
+		{
+			throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+				.extra( "X" ) );
+		}
+
+		// get the KRoll method
+		FKList* self = Falcon::dyncast<FKList*>(vm->self().asObject());
+		KList* list = self->klist();
+		list->Append( FalconUtils::ToKrollValue( *i_value ) );
+	}
+
+	static void FKList_Remove( Falcon::VMachine* vm )
+	{
+		// check parameters
+		Falcon::Item* i_index = vm->param( 0 );
+
+		if( i_index == 0 || ! i_index->isOrdinal() )
+		{
+			throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+				.extra( "N" ) );
+		}
+
+		// get the KRoll method
+		FKList* self = Falcon::dyncast<FKList*>(vm->self().asObject());
+		KList* list = self->klist();
+
+		Falcon::int64 index = i_index->forceInteger();
+		if( index < 0 || index >= (Falcon::int64) list->Size() )
+		{
+			throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_param_range, __LINE__ ) );
+		}
+		
+		vm->regA().setBoolean( list->Remove( (unsigned int) index ) );
+	}
+	
 //===================================================
 // Module declaration
 //===================================================
@@ -185,11 +330,27 @@ namespace Falcon
 		// we don't add any standard property; all done via set/get/hasProperty.
 
 		Symbol* cls_kmethod = self->addClass( FALCON_KMETHOD_CLASS_NAME );
-		cls_kmethod->getClassDef()->factory( &KObject_factory );
+		cls_kmethod->getClassDef()->factory( &KMethod_factory );
 		cls_kmethod->setWKS( true );
 		// allow the KMethod object to be seen as a functor:
 		self->addClassMethod( cls_kmethod, "call__", &kmethod_call );
 
+		// reflect the KList
+		Symbol* cls_klist = self->addClass( FALCON_KLIST_CLASS_NAME );
+		cls_klist->getClassDef()->factory( &FKList_factory );
+		cls_klist->setWKS( true );
+
+		// allow the KMethod object to be seen as a functor:
+		self->addClassMethod( cls_klist, "At", &FKList_At ).asSymbol()
+			->addParam( "index" );
+		self->addClassMethod( cls_klist, "SetAt", &FKList_SetAt ).asSymbol()
+			->addParam( "index" )->addParam( "value" );
+		self->addClassMethod( cls_klist, "Size", &FKList_Size );
+		self->addClassMethod( cls_klist, "Append", &FKList_Append ).asSymbol()
+			->addParam( "value" );
+		self->addClassMethod( cls_klist, "Remove", &FKList_Remove ).asSymbol()
+			->addParam( "index" );
+		
 		return self;
 	}
 
