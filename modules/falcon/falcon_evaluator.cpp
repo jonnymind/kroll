@@ -89,13 +89,18 @@ namespace kroll
 		//const char *mimeType = args.GetString(0).c_str();
 		const char *name = args.GetString(1).c_str();
 		std::string code = args.GetString(2);
-		//SharedKObject windowGlobal = args.GetObject(3);
+		SharedKObject windowGlobal = args.GetObject(3);
 
 		Logger *logger = Logger::Get("Falcon");
-		
+		// get the global window object
+		// TODO: cache it globally
+		Falcon::Item* i_window = m_vm->findGlobalItem( "window" );
+
+		// turn into a falcon item
+		FalconUtils::ToFalconItem( Value::NewObject(windowGlobal), *i_window );
+		logger->Debug( "Running falcons script \"%s\"", name );
 		try
 		{
-			logger->Debug( "Executing falcon script \"%s\":\n%s", name, code.c_str());
 			m_intcomp->compileNext( code.c_str() );
 		}
 		catch( Falcon::Error* e )
@@ -104,7 +109,6 @@ namespace kroll
 			logger->Error("Error in Falcon Script: %s", err.c_str() );
 			e->decref();
 		}
-		
 		
 		// TODO: return value from evaluated code goes here
 		result->SetNull();

@@ -16,6 +16,7 @@
 #include "k_falcon_list.h"
 #include "k_falcon_object.h"
 #include "k_falcon_method.h"
+#include "k_falcon_func.h"
 #include "falcon_utils.h"
 
 namespace kroll

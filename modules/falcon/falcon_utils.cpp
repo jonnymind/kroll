@@ -32,6 +32,7 @@ namespace kroll
 
 			case FLC_ITEM_ARRAY: return Value::NewObject( new KFalconList( item.asArray() ) );
 			case FLC_ITEM_OBJECT: return Value::NewObject( new KFalconObject( item.asObjectSafe() ) );
+			case FLC_ITEM_FUNC: return Value::NewMethod( new KFalconFunc( item ) );
 			case FLC_ITEM_METHOD: return Value::NewMethod( new KFalconMethod( item ) );
 		}
 
@@ -76,12 +77,20 @@ namespace kroll
 			{
 				item = kfo->ToFalcon();
 			}
-			else
+			else 
 			{
-				// TODO: use the pre-fetched instance saved int the Kroll FalconEvaluator instance.
-				Falcon::VMachine* cvm = Falcon::VMachine::getCurrent();
-				Falcon::Item* cls = cvm->findWKI( FALCON_KMETHOD_CLASS_NAME );
-				item = cls->asClass()->createInstance( &value );
+				AutoPtr<KFalconFunc> kff = value.cast<KFalconFunc>();
+				if ( ! kff.isNull() )
+				{
+					item = kff->ToFalcon();
+				}
+				else
+				{
+					// TODO: use the pre-fetched instance saved int the Kroll FalconEvaluator instance.
+					Falcon::VMachine* cvm = Falcon::VMachine::getCurrent();
+					Falcon::Item* cls = cvm->findWKI( FALCON_KMETHOD_CLASS_NAME );
+					item = cls->asClass()->createInstance( &value );
+				}
 			}
 		}
 		else if (value->IsList())

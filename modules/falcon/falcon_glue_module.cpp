@@ -50,16 +50,23 @@ namespace Falcon
 		virtual bool getProperty( const String &key, Item &ret ) const
 		{
 			AutoCString ckey( key );
-			// In case of problems, this should fire an application specific exception
-			kroll::SharedValue v = m_data->ToObject()->Get( ckey.c_str() );
-			kroll::FalconUtils::ToFalconItem( v, ret );
-			return true;
+			if ( m_data->ToObject()->HasProperty( ckey.c_str() ) )
+			{
+				// In case of problems, this should fire an application specific exception
+				kroll::SharedValue v = m_data->ToObject()->Get( ckey.c_str() );
+				kroll::FalconUtils::ToFalconItem( v, ret );
+				return true;
+			}
+			// return one of our properties... or raise an error.
+			return defaultProperty( key, ret );
 		}
 
 		virtual CoreObject *clone() const
 		{
 			return new FKObject( *this );
 		}
+
+		kroll::SharedValue data() { return m_data; }
 
 	private:
 		kroll::SharedValue m_data;
@@ -111,9 +118,11 @@ namespace Falcon
 
 		virtual bool getProperty( const String &key, Item &ret ) const
 		{
+			Logger::Get("Falcon")->Debug( "getting property" );
 			// prepare a callable method for this method.
 			if ( key == "call__" )
 			{
+				Logger::Get("Falcon")->Debug( "getting call__ property" );
 				return defaultProperty( key, ret );
 			}
 			
@@ -132,13 +141,14 @@ namespace Falcon
 		void call( VMachine* vm )
 		{
 			ArgList args;
+			Logger::Get("Falcon")->Debug( "Calling method with %d values", vm->paramCount() );
 			
-			for( Falcon::uint32 pc = 0; vm->paramCount(); ++pc )
+			for( int pc = 0; pc < vm->paramCount(); ++pc )
 			{
 				args.push_back( FalconUtils::ToKrollValue( *vm->param(pc) ) );
 			}
 
-			m_data->ToMethod()->Call( args );
+			FalconUtils::ToFalconItem( m_data->ToMethod()->Call( args ), vm->regA() );
 		}
 		
 	private:
@@ -307,7 +317,26 @@ namespace Falcon
 		
 		vm->regA().setBoolean( list->Remove( (unsigned int) index ) );
 	}
-	
+
+//===================================================
+// Useful functions for falcon SCRIPTS
+//===================================================
+
+static void KFObkect_GetPropertyNames( Falcon::VMachine* vm )
+{
+	FKObject* fko = dyncast<FKObject*>( vm->self().asObject() );
+	SharedStringList ssl = fko->data()->ToObject()->GetPropertyNames();
+
+	CoreArray* ca = new CoreArray;
+	for( uint32 i = 0; i < ssl->size(); ++i )
+	{
+		CoreString* cs = new CoreString;
+		cs->fromUTF8( ssl->at(i)->c_str() );
+		ca->append( cs );
+	}
+	vm->retval( ca );
+}
+
 //===================================================
 // Module declaration
 //===================================================
@@ -323,10 +352,15 @@ namespace Falcon
 		self->engineVersion( FALCON_VERSION_NUM );
 		self->version( FALCON_KROLL_GLUE_MODULE_VERSION );
 
+		// Add the window global object.
+		self->addGlobal( "window" )->setWKS( true );
+		
 		// "%KObject"; the "%" marks it as CPP-private.
 		Symbol* cls_kobject = self->addClass( FALCON_KOBJECT_CLASS_NAME ); 
 		cls_kobject->getClassDef()->factory( &KObject_factory );
 		cls_kobject->setWKS( true );
+		self->addClassMethod( cls_kobject, "GetPropertyNames", &KFObkect_GetPropertyNames );
+		
 		// we don't add any standard property; all done via set/get/hasProperty.
 
 		Symbol* cls_kmethod = self->addClass( FALCON_KMETHOD_CLASS_NAME );

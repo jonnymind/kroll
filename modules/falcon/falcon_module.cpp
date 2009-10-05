@@ -32,8 +32,9 @@ namespace kroll
 		
 		SharedKObject global = this->host->GetGlobalObject();
 		global->Set("Falcon", Value::Undefined);
-		logger->Debug( "Binding count at cleanup: %d", this->binding->referenceCount() );
 		Script::GetInstance()->RemoveScriptEvaluator(this->binding);
+		logger->Debug( "Binding count at cleanup: %d", this->binding->referenceCount() );
+		this->binding->release();
 		this->binding = NULL;
 		FalconModule::instance_ = NULL;
 
@@ -50,6 +51,7 @@ namespace kroll
 		this->binding = new FalconEvaluator();
 		global->Set("Falcon", Value::NewObject(this->binding));
 		Script::GetInstance()->AddScriptEvaluator(this->binding);
+		Logger::Get("Falcon")->Debug( "Binding count at initializing: %d", this->binding->referenceCount() );
 	}
 
 	const static std::string falcon_suffix = "module.fal";
