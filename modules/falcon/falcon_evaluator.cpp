@@ -105,9 +105,7 @@ namespace kroll
 		}
 		catch( Falcon::Error* e )
 		{
-			Falcon::AutoCString err( e->toString() );
-			logger->Error("Error in Falcon Script: %s", err.c_str() );
-			e->decref();
+			FalconUtils::ManageError( e );
 		}
 		
 		// TODO: return value from evaluated code goes here

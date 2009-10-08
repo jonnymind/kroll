@@ -11,6 +11,7 @@ namespace kroll
 	void FalconUtils::ManageError( Falcon::Error* e )
 	{
 		Falcon::AutoCString desc( e->toString() );
+		Logger::Get("Falcon")->Error("Error in Falcon Script: %s", desc.c_str() );
 		ValueException ve = ValueException::FromString( desc.c_str() ); // actually to UTF8
 		e->decref();
 		throw ve;
