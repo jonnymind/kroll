@@ -8,6 +8,7 @@
 
 #include <falcon/intcomp.h>
 #include <falcon/vm.h>
+#include <falcon/item.h>
 
 namespace kroll
 {
@@ -19,6 +20,10 @@ namespace kroll
 		void Evaluate(const ValueList& args, SharedValue result);
 		void CanEvaluate(const ValueList& args, SharedValue result);
 
+		Falcon::CoreClass* GetKObjectClass() { return m_kobj_class->item().asClass(); }
+		Falcon::CoreClass* GetKMethodClass() { return m_kmth_class->item().asClass(); }
+		Falcon::CoreClass* GetKListClass() { return m_klist_class->item().asClass(); }
+		
 	private:
 		Falcon::InteractiveCompiler* m_intcomp;
 		KVMachine* m_vm;
@@ -26,6 +31,8 @@ namespace kroll
 		
 		// not necessary, but useful for performance.
 		Falcon::GarbageLock* m_kobj_class;
+		Falcon::GarbageLock* m_kmth_class;
+		Falcon::GarbageLock* m_klist_class;
 	};
 }
 

@@ -17,6 +17,7 @@
 #include "k_falcon_object.h"
 #include "k_falcon_method.h"
 #include "k_falcon_func.h"
+#include "k_falcon_dict.h"
 #include "falcon_utils.h"
 
 namespace kroll
@@ -45,9 +46,15 @@ namespace kroll
 			return instance_;
 		}
 
+		static FalconEvaluator* Evaluator()
+		{
+			return evaluator_;
+		}
+		
 	private:
 		SharedKObject binding;
 		static FalconModule *instance_;
+		static FalconEvaluator *evaluator_;
 		DISALLOW_EVIL_CONSTRUCTORS(FalconModule);
 	};
 }

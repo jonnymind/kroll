@@ -10,7 +10,8 @@ namespace kroll
 	KROLL_MODULE(FalconModule, STRING(MODULE_NAME), STRING(MODULE_VERSION));
 
 	FalconModule* FalconModule::instance_ = NULL;
-
+	FalconEvaluator* FalconModule::evaluator_ = NULL;
+	
 	void FalconModule::Initialize()
 	{
 		FalconModule::instance_ = this;
@@ -48,7 +49,8 @@ namespace kroll
 	void FalconModule::InitializeBinding()
 	{
 		SharedKObject global = this->host->GetGlobalObject();
-		this->binding = new FalconEvaluator();
+		evaluator_ = new FalconEvaluator();
+		this->binding = evaluator_;
 		global->Set("Falcon", Value::NewObject(this->binding));
 		Script::GetInstance()->AddScriptEvaluator(this->binding);
 		Logger::Get("Falcon")->Debug( "Binding count at initializing: %d", this->binding->referenceCount() );

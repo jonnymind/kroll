@@ -40,14 +40,18 @@ namespace kroll
 		// Put in the Kroll-glue module
 		m_vm->link( Falcon::krollGlueModule() );
 
-		// we're gonna have just one VM in this system, so..
-		
-
 		// get our KObject class instance, so that we can use it later on.
 		Falcon::Item* kobj_cls= m_vm->findWKI( FALCON_KOBJECT_CLASS_NAME );
 		assert( kobj_cls != 0 );
 		m_kobj_class = new Falcon::GarbageLock( *kobj_cls );
-		
+
+		Falcon::Item* kmth_cls= m_vm->findWKI( FALCON_KMETHOD_CLASS_NAME );
+		assert( kmth_cls != 0 );
+		m_kmth_class = new Falcon::GarbageLock( *kmth_cls );
+
+		Falcon::Item* klist_cls= m_vm->findWKI( FALCON_KLIST_CLASS_NAME );
+		assert( klist_cls != 0 );
+		m_klist_class = new Falcon::GarbageLock( *klist_cls );
 		
 		// Create a module loader using the default engine path settings
 		m_loader = new Falcon::ModuleLoader( "." );
@@ -64,6 +68,10 @@ namespace kroll
 		Logger *logger = Logger::Get("Falcon");
 		logger->Debug( "Terminating the Falcon Evaluator" );
 
+		delete m_kobj_class;
+		delete m_kmth_class;
+		delete m_klist_class;
+		
 		delete m_intcomp;
 		delete m_loader;
 		m_vm->finalize();

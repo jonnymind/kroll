@@ -32,6 +32,7 @@ namespace kroll
 			}
 
 			case FLC_ITEM_ARRAY: return Value::NewObject( new KFalconList( item.asArray() ) );
+			case FLC_ITEM_DICT: return Value::NewObject( new KFalconDict( item.asDict() ) );
 			case FLC_ITEM_OBJECT: return Value::NewObject( new KFalconObject( item.asObjectSafe() ) );
 			case FLC_ITEM_FUNC: return Value::NewMethod( new KFalconFunc( item ) );
 			case FLC_ITEM_METHOD: return Value::NewMethod( new KFalconMethod( item ) );
@@ -65,10 +66,15 @@ namespace kroll
 			}
 			else
 			{
-				// TODO: use the pre-fetched instance saved int the Kroll FalconEvaluator instance.
-				Falcon::VMachine* cvm = Falcon::VMachine::getCurrent();
-				Falcon::Item* cls = cvm->findWKI( FALCON_KOBJECT_CLASS_NAME );
-				item = cls->asClass()->createInstance( &value );
+				AutoPtr<KFalconDict> kfd = value.cast<KFalconDict>();
+				if ( ! kfd.isNull() )
+				{
+					item = kfd->ToFalcon();
+				}
+				else
+				{
+					item = FalconModule::Evaluator()->GetKObjectClass()->createInstance( &value );
+				}
 			}
 		}
 		else if (value->IsMethod())
@@ -87,10 +93,7 @@ namespace kroll
 				}
 				else
 				{
-					// TODO: use the pre-fetched instance saved int the Kroll FalconEvaluator instance.
-					Falcon::VMachine* cvm = Falcon::VMachine::getCurrent();
-					Falcon::Item* cls = cvm->findWKI( FALCON_KMETHOD_CLASS_NAME );
-					item = cls->asClass()->createInstance( &value );
+					item = FalconModule::Evaluator()->GetKMethodClass()->createInstance( &value );
 				}
 			}
 		}
@@ -103,10 +106,7 @@ namespace kroll
 			}
 			else
 			{
-				// TODO: use the pre-fetched instance saved int the Kroll FalconEvaluator instance.
-				Falcon::VMachine* cvm = Falcon::VMachine::getCurrent();
-				Falcon::Item* cls = cvm->findWKI( FALCON_KLIST_CLASS_NAME );
-				item = cls->asClass()->createInstance( &value );
+				item = FalconModule::Evaluator()->GetKListClass()->createInstance( &value );
 			}
 		}
 		else
