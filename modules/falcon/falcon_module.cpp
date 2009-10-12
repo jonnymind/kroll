@@ -3,7 +3,9 @@
  * see LICENSE in the root folder for details on the license.
  * Copyright (c) 2008 Appcelerator, Inc. All Rights Reserved.
  */
+ 
 #include "falcon_module.h"
+#include <Poco/Path.h>
 
 namespace kroll
 {
@@ -60,16 +62,12 @@ namespace kroll
 
 	bool FalconModule::IsModule(std::string& path)
 	{
-		// TODO: re-enable this once we have module loading done
-		return false;
-		//return (path.substr(path.length()-falcon_suffix.length()) == falcon_suffix);
+		return (path.substr(path.length()-falcon_suffix.length()) == falcon_suffix);
 	}
 
 	Module* FalconModule::CreateModule(std::string& path)
 	{
-        return 0;
-        // TODO: for not leave this disabled
-		/*Logger *logger = Logger::Get("Falcon");
+		Logger *logger = Logger::Get("Falcon");
 
 		// run the main code of the module -- why?
 		try {
@@ -86,10 +84,8 @@ namespace kroll
 		}
 		catch( Falcon::Error *errc )
 		{
-			Falcon::AutoCString err( errc->toString() );
-			logger->Error("Error loading Falcon path=%s\n%s", path.c_str(), err.c_str() );
-			errc->decref();
-			return 0;
+         // rethrows an exception.
+         FalconUtils::ManageError( errc );
 		}
 
 		Poco::Path p( path );
@@ -100,7 +96,6 @@ namespace kroll
 		logger->Info("Loading Falcon path=%s", path.c_str());
 
 		return new FalconModuleInstance(host, path, moduledir, name);
-        */
 	}
 
 }
