@@ -13,7 +13,7 @@ namespace kroll
 	AutoPtr<KEventObject> KEventObject::root = new KEventObject(true, "Host");
 
 	KEventObject::KEventObject(const char *type) :
-		AccessorBoundObject(type),
+		KAccessorObject(type),
 		isRoot(false)
 	{
 		{
@@ -27,7 +27,7 @@ namespace kroll
 	}
 
 	KEventObject::KEventObject(bool isRoot, const char *type) :
-		AccessorBoundObject(type),
+		KAccessorObject(type),
 		isRoot(isRoot)
 	{
 		{
@@ -54,6 +54,11 @@ namespace kroll
 
 		KEventObject::listenerMap.erase(this);
 		delete listeners;
+	}
+
+	AutoPtr<Event> KEventObject::CreateEvent(const std::string& eventName)
+	{
+		return new Event(AutoPtr<KEventObject>(this, true), eventName);
 	}
 
 	void KEventObject::RemoveEventListener(std::string& eventName, SharedKMethod listener)
@@ -118,9 +123,7 @@ namespace kroll
 
 	bool KEventObject::FireEvent(std::string& eventName)
 	{
-		this->duplicate();
-		AutoPtr<KEventObject> target = this;
-		AutoPtr<Event> event = new Event(target, eventName);
+		AutoPtr<Event> event(this->CreateEvent(eventName));
 		return this->FireEvent(event);
 	}
 
@@ -195,8 +198,8 @@ namespace kroll
 		{
 			Logger* logger = Logger::Get("KEventObject");
 			SharedString ss = e.DisplayString();
-			logger->Error("Exception caught during window event callback: %s", ss->c_str());
-
+			SharedString ds = event->target->DisplayString();
+			logger->Error("Exception caught during event callback (target=[%s]): %s", ds->c_str(), ss->c_str());
 		}
 	}
 

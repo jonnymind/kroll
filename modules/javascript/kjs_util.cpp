@@ -6,6 +6,7 @@
 
 #include "javascript_module.h"
 #include <Poco/FileStream.h>
+#include <Poco/Mutex.h>
 
 namespace kroll
 {
@@ -541,13 +542,19 @@ namespace KJSUtil
 			if (!strcmp(name, "toString"))
 			{
 				JSStringRef s = JSStringCreateWithUTF8CString("toString");
-				return JSObjectMakeFunctionWithCallback(jsContext, s, &ToStringCallback);
+				JSValueRef toString = JSObjectMakeFunctionWithCallback(
+					jsContext, s, &ToStringCallback);
+				JSStringRelease(s);
+				return toString;
 			}
 
 			if (!strcmp(name, "equals"))
 			{
 				JSStringRef s = JSStringCreateWithUTF8CString("equals");
-				return JSObjectMakeFunctionWithCallback(jsContext, s, &EqualsCallback);
+				JSValueRef equals = JSObjectMakeFunctionWithCallback(
+					jsContext, s, &EqualsCallback);
+				JSStringRelease(s);
+				return equals;
 			}
 		}
 
@@ -646,24 +653,25 @@ namespace KJSUtil
 			JSStringRef propertyName = JSStringCreateWithUTF8CString(PRODUCT_NAME);
 			JSObjectSetProperty(jsContext, globalObject, propertyName,
 				jsAPI, kJSPropertyAttributeNone, NULL);
-
+			JSStringRelease(propertyName);
 		}
-		
+
 		return globalObject;
 	}
 
 	static std::map<JSObjectRef, JSGlobalContextRef> jsContextMap;
-	void RegisterGlobalContext(
-		JSObjectRef object,
-		JSGlobalContextRef globalContext)
+	Poco::Mutex jsContextMapMutex;
+	void RegisterGlobalContext(JSObjectRef object, JSGlobalContextRef globalContext)
 	{
+		Poco::Mutex::ScopedLock lock(jsContextMapMutex);
 		jsContextMap[object] = globalContext;
 	}
-	
+
 	void UnregisterGlobalContext(JSObjectRef object)
 	{
+		Poco::Mutex::ScopedLock lock(jsContextMapMutex);
 		std::map<JSObjectRef, JSGlobalContextRef>::iterator i = jsContextMap.find(object);
-		if (i!=jsContextMap.end())
+		if (i != jsContextMap.end())
 		{
 			jsContextMap.erase(i);
 		}
@@ -672,6 +680,7 @@ namespace KJSUtil
 
 	JSGlobalContextRef GetGlobalContext(JSObjectRef object)
 	{
+		Poco::Mutex::ScopedLock lock(jsContextMapMutex);
 		if (jsContextMap.find(object) == jsContextMap.end())
 		{
 			return NULL;
@@ -683,8 +692,10 @@ namespace KJSUtil
 	}
 
 	static std::map<JSGlobalContextRef, int> jsContextRefCounts;
+	Poco::Mutex jsContextRefCountsMutex;
 	void ProtectGlobalContext(JSGlobalContextRef globalContext)
 	{
+		Poco::Mutex::ScopedLock lock(jsContextRefCountsMutex);
 		if (jsContextRefCounts.find(globalContext) == jsContextRefCounts.end())
 		{
 			JSGlobalContextRetain(globalContext);
@@ -694,26 +705,35 @@ namespace KJSUtil
 		{
 			jsContextRefCounts[globalContext]++;
 		}
+
+		std::map<JSGlobalContextRef, int>::iterator i = jsContextRefCounts.begin();
+		while (i != jsContextRefCounts.end())
+		{
+			std::map<JSGlobalContextRef, int>::iterator toRelease = i++;
+			if (toRelease->second <= 0)
+			{
+				JSGlobalContextRelease(toRelease->first);
+				jsContextRefCounts.erase(toRelease);
+			}
+		}
 	}
 
 	void UnprotectGlobalContext(JSGlobalContextRef globalContext)
 	{
+		Poco::Mutex::ScopedLock lock(jsContextRefCountsMutex);
 		std::map<JSGlobalContextRef, int>::iterator i
 			= jsContextRefCounts.find(globalContext);
 
 		if (i == jsContextRefCounts.end())
 		{
 			GetLogger()->Error("Tried to unprotect an unknown jsContext!");
+			return;
 		}
-		else if (i->second == 1)
-		{
-			JSGlobalContextRelease(globalContext);
-			jsContextRefCounts.erase(i);
-		}
-		else
-		{
-			jsContextRefCounts[globalContext]--;
-		}
+
+		// Defer the release of this global context until the next protection.
+		// This function may be called from JavaScript garbage collection. Unprotecting
+		// the contet here might spawn another garbage collection causing a segfault.
+		jsContextRefCounts[globalContext]--;
 	}
 
 	SharedValue Evaluate(JSContextRef jsContext, char *script)
@@ -863,6 +883,7 @@ namespace KJSUtil
 			JSValueRef js = ToJSValue(v, jsContext);
 			JSStringRef propertyName = JSStringCreateWithUTF8CString(other.c_str());
 			JSObjectSetProperty(jsContext, globalObject, propertyName, js, kJSPropertyAttributeNone, NULL);
+			JSStringRelease(propertyName);
 		}
 	}
 

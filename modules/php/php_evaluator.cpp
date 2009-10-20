@@ -10,7 +10,7 @@
 namespace kroll
 {
 	PHPEvaluator::PHPEvaluator()
-		: StaticBoundObject("PHPEvaluator")
+		: StaticBoundObject("PHP.PHPEvaluator")
 	{
 		/**
 		 * @tiapi(method=True,name=PHP.canEvaluate,since=0.7)
@@ -135,62 +135,31 @@ namespace kroll
 		args.VerifyException("canPreprocess", "s");
 
 		std::string url = args.GetString(0);
+		Poco::URI uri(url);
+		
 		result->SetBool(false);
-		if (Script::HasExtension(url.c_str(), "php"))
+		if (Script::HasExtension(uri.getPath().c_str(), "php"))
 		{
 			result->SetBool(true);
 		}
 	}
-
-	void PHPEvaluator::FillServerVars(Poco::URI& uri, SharedKObject scope TSRMLS_DC)
+	
+	void PHPEvaluator::FillGet(Poco::URI& uri TSRMLS_DC)
 	{
-		// Fill $_SERVER with HTTP headers
-		zval *SERVER;
-		array_init(SERVER);
+		Poco::StringTokenizer tokens(uri.getQuery(), "&=");
+		Poco::StringTokenizer::Iterator iter = tokens.begin();
 		
-		//if (zend_hash_find(&EG(symbol_table), "_SERVER", sizeof("_SERVER"), (void**)&SERVER) == SUCCESS)
-		//{
-		if (scope->HasProperty("httpHeaders"))
+		for (; iter != tokens.end(); iter++)
 		{
-			SharedStringList headerNames = scope->GetObject("httpHeaders")->GetPropertyNames();
-			for (size_t i = 0; i < headerNames->size(); i++)
-			{
-				//zval *headerValue;
-				const char *headerName = headerNames->at(i)->c_str();
-				const char *headerValue = scope->GetObject("httpHeaders")->
-					GetString(headerName).c_str();
-				
-				//ALLOC_INIT_ZVAL(headerValue);
-				//ZVAL_STRING(headerValue, (char*)headers->GetString(headerName).c_str(), 1);
-				
-				add_assoc_stringl(SERVER, (char *) headerName, (char *) headerValue, strlen(headerValue), 1);
-				//zend_hash_add(Z_ARRVAL_P(SERVER), (char*)headerName, strlen(headerName)+1, &headerValue, sizeof(zval*), NULL);
-				//ZEND_SET_SYMBOL(Z_ARRVAL_P(SERVER), (char*)headerName, headerValue);
-			}
-			ZEND_SET_SYMBOL(&EG(symbol_table), (char *)"_SERVER", SERVER);
+			std::string key = *iter;
+			std::string value = *(++iter);
+			
+			zval *val;
+			ALLOC_INIT_ZVAL(val);
+			ZVAL_STRING(val, (char *) value.c_str(), 1);
+			zend_hash_add(Z_ARRVAL_P(PG(http_globals)[TRACK_VARS_GET]),
+				(char *) key.c_str(), key.size()+1, &val, sizeof(zval*), NULL);
 		}
-		//}
-		
-		// Fill $_GET with query string parameters
-		zval *GET;
-		if (zend_hash_find(&EG(symbol_table), "_GET", sizeof("_GET"), (void**)&GET) == SUCCESS)
-		{
-			std::string queryString = uri.getQuery();
-			Poco::StringTokenizer tokens(uri.getQuery(), "&=");
-			for (Poco::StringTokenizer::Iterator iter = tokens.begin();
-				iter != tokens.end(); iter++)
-			{
-				std::string key = *iter;
-				std::string value = *(++iter);
-				
-				zval *val;
-				ALLOC_INIT_ZVAL(val);
-				ZVAL_STRING(val, (char*)value.c_str(), 1);
-				zend_hash_add(Z_ARRVAL_P(GET), (char*)key.c_str(), key.size()+1, &val, sizeof(zval*), NULL);
-			}
-		}
-		
-		// TODO: Fill $_POST, $_REQUEST
 	}
 	
 	void PHPEvaluator::Preprocess(const ValueList& args, SharedValue result)
@@ -207,7 +176,8 @@ namespace kroll
 		TSRMLS_FETCH();
 
 		PHPModule::SetBuffering(true);
-
+		PHPModule::Instance()->PushURI(uri);
+		
 		// These variables are normally initialized by php_module_startup
 		// but we do not call that function, so we manually initialize.
 		PG(header_is_being_sent) = 0;
@@ -216,12 +186,12 @@ namespace kroll
 		SG(request_info).argc= 0;
 		SG(request_info).argv= (char **) NULL;
 		php_request_startup(TSRMLS_C);
+		FillGet(uri TSRMLS_CC);
 
 		// This seems to be needed to make PHP actually give  us errors
 		// at parse/compile time -- see: main/main.c line 969
 		PG(during_request_startup) = 0;
 
-		//FillServerVars(uri, scope TSRMLS_CC);
 		zend_file_handle script;
 		script.type = ZEND_HANDLE_FP;
 		script.filename = (char*)path.c_str();
@@ -232,7 +202,6 @@ namespace kroll
 		zend_first_try
 		{
 			php_execute_script(&script TSRMLS_CC);
-			
 		}
 		zend_catch
 		{
@@ -246,6 +215,7 @@ namespace kroll
 		o->SetString("mimeType", PHPModule::GetMimeType().c_str());
 		result->SetObject(o);
 
+		PHPModule::Instance()->PopURI();
 		PHPModule::SetBuffering(false);
 	}
 }

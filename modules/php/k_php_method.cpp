@@ -8,6 +8,7 @@
 namespace kroll {
 
 	KPHPMethod::KPHPMethod(zval* object, const char* methodName) :
+		KMethod("PHP.KPHPMethod"),
 		object(object),
 		methodName(strdup(methodName)),
 		globalObject(PHPUtils::GetCurrentGlobalObject())
@@ -43,7 +44,7 @@ namespace kroll {
 		{
 			SharedValue value = args.at(i);
 
-			zval *zargument;
+			zval* zargument;
 			ALLOC_INIT_ZVAL(zargsStore[i]);
 			zargs[i] = &zargsStore[i];
 

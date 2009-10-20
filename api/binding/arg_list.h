@@ -22,7 +22,7 @@ namespace kroll
 	 */
 	class KROLL_API ArgList
 	{
-	public:
+		public:
 		ArgList();
 		ArgList(SharedValue);
 		ArgList(SharedValue, SharedValue);
@@ -31,15 +31,16 @@ namespace kroll
 		ArgList(const ArgList&);
 		~ArgList() {};
 
-		bool Verify(const char* sig) const;
-		void VerifyException(const char *name, const char* sig) const;
+		bool Verify(std::string& argSpec) const;
+		void VerifyException(const char* name, std::string argSpec) const;
 
-	public:
+		public:
 		void push_back(SharedValue value);
 		size_t size() const;
 		const SharedValue& at(size_t) const;
 		const SharedValue& operator[](size_t) const;
 
+		SharedValue GetValue(size_t index, SharedValue defaultValue=Value::Undefined) const;
 		int GetInt(size_t index, int defaultValue=0) const;
 		double GetDouble(size_t index, double defaultValue=0.0) const;
 		double GetNumber(size_t index, double defaultValue=0.0) const;
@@ -49,13 +50,11 @@ namespace kroll
 		SharedKMethod GetMethod(size_t index, SharedKMethod defaultValue=NULL) const;
 		SharedKList GetList(size_t index, SharedKList defaultValue=NULL) const;
 
-	private:
+		private:
 		SharedPtr<std::vector<SharedValue> > args;
 
-		static inline bool VerifyArg(SharedValue arg, const char* t);
-		static inline std::vector<std::string>* ParseSigString(const char* sig);
-		static SharedString GenerateSignature(const char* name, std::vector<std::string>* sig_vector);
-		bool VerifyImpl(std::vector<std::string>* sig_vector) const;
+		static inline bool VerifyArg(SharedValue arg, char t);
+		static std::string GenerateSignature(const char* name, std::string& argSpec);
 	};
 
 }

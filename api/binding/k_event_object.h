@@ -25,13 +25,14 @@ namespace kroll
 		static unsigned int currentId;
 	};
 
-	class KROLL_API KEventObject : public AccessorBoundObject
+	class KROLL_API KEventObject : public KAccessorObject
 	{
 		public:
 		KEventObject(const char* name = "");
 		KEventObject(bool root, const char* name = "");
 		~KEventObject();
 
+		AutoPtr<Event> CreateEvent(const std::string& eventName);
 		unsigned int AddEventListener(std::string& eventName, SharedKMethod listener);
 		unsigned int AddEventListenerForAllEvents(SharedKMethod callback);
 		virtual void RemoveEventListener(std::string& eventName, SharedKMethod listener);

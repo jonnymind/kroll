@@ -16,18 +16,12 @@ namespace kroll
 		/*
 		 * Create an AsyncJob and initialize its binding-layer properties.
 		 */
-		AsyncJob(SharedKMethod job=NULL);
+		AsyncJob(SharedKMethod job=0);
 
 		/*
 		 * Destroy an AsyncJob and release its callbacks.
 		 */
 		virtual ~AsyncJob();
-
-		/*
-		 * Get a SharedPtr to this AsyncJob. The return value of
-		 * this method will be NULL after the job finishes executing.
-		 */
-		AutoPtr<AsyncJob> GetAutoPtr();
 
 		/*
 		 * Run an async job synchronously (on the same thread).
@@ -107,9 +101,21 @@ namespace kroll
 		 * related to that job.
 		 */
 		void AddErrorCallback(SharedKMethod);
+		
+		/**
+		 * Set arguments for this job.
+		 * This allows the job method to take in custom arguments
+		 */
+		void SetArguments(ValueList args) { this->arguments = args; }
 
+		/**
+		 * Get the arguments for this job.
+		 */
+		ValueList& GetArguments() { return arguments; }
+		
 		protected:
 		SharedKMethod job;
+		ValueList arguments;
 		double progress;
 		bool completed;
 		SharedValue result;
@@ -131,7 +137,6 @@ namespace kroll
 		void _IsComplete(const ValueList& args, SharedValue result);
 
 		private:
-		AutoPtr<AsyncJob> sharedThis;
 		std::vector<SharedKMethod> progressCallbacks;
 		std::vector<SharedKMethod> completedCallbacks;
 		std::vector<SharedKMethod> errorCallbacks;

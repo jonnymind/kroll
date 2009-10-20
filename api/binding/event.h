@@ -9,10 +9,10 @@
 
 namespace kroll
 {
-	class KROLL_API Event : public AccessorBoundObject
+	class KROLL_API Event : public KAccessorObject
 	{
 		public:
-		Event(AutoPtr<KEventObject> target, std::string& eventName);
+		Event(AutoPtr<KEventObject> target, const std::string& eventName);
 		void _GetTarget(const ValueList&, SharedValue result);
 		void _GetType(const ValueList&, SharedValue result);
 		void _GetTimestamp(const ValueList&, SharedValue result);
@@ -21,7 +21,7 @@ namespace kroll
 		static void SetEventConstants(KObject* target);
 
 		AutoPtr<KEventObject> target;
-		std::string& eventName;
+		std::string eventName;
 		Poco::Timestamp timestamp;
 		bool stopped;
 		bool preventedDefault;
@@ -47,7 +47,15 @@ namespace kroll
 		static std::string CLICKED;
 		static std::string DOUBLE_CLICKED;
 		static std::string EXIT;
+		static std::string APP_EXIT;
 		static std::string READ;
+		static std::string HTTP_DONE;
+		static std::string HTTP_STATE_CHANGED;
+		static std::string HTTP_TIMEOUT;
+		static std::string HTTP_REDIRECT;
+		static std::string HTTP_ABORT;
+		static std::string HTTP_DATA_SENT;
+		static std::string HTTP_DATA_RECEIVED;
 	};
 }
 #endif

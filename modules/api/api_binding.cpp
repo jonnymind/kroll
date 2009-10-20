@@ -9,6 +9,7 @@
 #include "dependency_binding.h"
 #include "environment_binding.h"
 #include "script_binding.h"
+#include <kroll/thread_manager.h>
 #include <algorithm>
 
 using std::string;
@@ -19,7 +20,7 @@ using std::map;
 namespace kroll
 {
 	APIBinding::APIBinding(Host* host) :
-		AccessorBoundObject("API"),
+		KAccessorObject("API"),
 		host(host),
 		global(host->GetGlobalObject()),
 		logger(Logger::Get("API")),
@@ -832,6 +833,8 @@ namespace kroll
 	
 	void APIBinding::RunInstaller()
 	{
+		START_KROLL_THREAD;
+
 		SharedApplication app = host->GetApplication();
 		BootUtils::RunInstaller(
 			this->installerDependencies, app, "", app->runtime->path, true);
@@ -842,6 +845,8 @@ namespace kroll
 				this->installerCallback, ValueList(), false);
 		}
 		this->installerMutex.unlock();
+
+		END_KROLL_THREAD;
 	}
 
 	SharedKList APIBinding::ComponentVectorToKList(
@@ -925,24 +930,37 @@ namespace kroll
 		}
 	}
 
+	static void GetBlobs(SharedValue value, std::vector<AutoBlob>& blobs)
+	{
+		if (value->IsObject())
+		{
+			blobs.push_back(value->ToObject().cast<Blob>());
+		}
+		else if (value->IsString())
+		{
+			blobs.push_back(new Blob(value->ToString()));
+		}
+		else if (value->IsList())
+		{
+			SharedKList list = value->ToList();
+			for (size_t j = 0; j < list->Size(); j++)
+			{
+				GetBlobs(list->At(j), blobs);
+			}
+		}
+		else if (value->IsNumber())
+		{
+			blobs.push_back(new Blob(value->ToInt()));
+		}
+	}
+	
 	void APIBinding::_CreateBlob(const ValueList& args, SharedValue result)
 	{
-		args.VerifyException("createBlob", "?s|o");
+		args.VerifyException("createBlob", "?s|o|l|i");
 		std::vector<AutoBlob> blobs;
 		for (size_t i = 0; i < args.size(); i++)
 		{
-			if (args.at(i)->IsObject())
-			{
-				AutoBlob blob = args.GetObject(i).cast<Blob>();
-				if (!blob.isNull())
-				{
-					blobs.push_back(blob);
-				}
-			}
-			else if (args.at(i)->IsString())
-			{
-				blobs.push_back(new Blob(args.GetString(i)));
-			}
+			GetBlobs(args.at(i), blobs);
 		}
 		result->SetObject(Blob::GlobBlobs(blobs));
 	}
@@ -962,6 +980,11 @@ namespace kroll
 		return object->Get(name);
 	}
 
+	bool KObjectWrapper::HasProperty(const char *name)
+	{
+		return object->HasProperty(name);	
+	}
+	
 	SharedStringList KObjectWrapper::GetPropertyNames()
 	{
 		return object->GetPropertyNames();
@@ -972,6 +995,11 @@ namespace kroll
 		return object->DisplayString(levels);
 	}
 
+	bool KObjectWrapper::Equals(SharedKObject other)
+	{
+		return object->Equals(other);	
+	}
+	
 	KMethodWrapper::KMethodWrapper(SharedKMethod method) :
 		method(method)
 	{
@@ -992,6 +1020,11 @@ namespace kroll
 		return method->Get(name);
 	}
 
+	bool KMethodWrapper::HasProperty(const char *name)
+	{
+		return method->HasProperty(name);
+	}
+	
 	SharedStringList KMethodWrapper::GetPropertyNames()
 	{
 		return method->GetPropertyNames();
@@ -1000,6 +1033,11 @@ namespace kroll
 	SharedString KMethodWrapper::DisplayString(int levels)
 	{
 		return method->DisplayString(levels);
+	}
+	
+	bool KMethodWrapper::Equals(SharedKObject other)
+	{
+		return method->Equals(other);	
 	}
 
 	KListWrapper::KListWrapper(SharedKList list) :
@@ -1042,6 +1080,11 @@ namespace kroll
 		return list->Get(name);
 	}
 
+	bool KListWrapper::HasProperty(const char *name)
+	{
+		return list->HasProperty(name);
+	}
+	
 	SharedStringList KListWrapper::GetPropertyNames()
 	{
 		return list->GetPropertyNames();
@@ -1051,6 +1094,10 @@ namespace kroll
 	{
 		return list->DisplayString(levels);
 	}
-
+	
+	bool KListWrapper::Equals(SharedKObject other)
+	{
+		return list->Equals(other);	
+	}
 
 }
