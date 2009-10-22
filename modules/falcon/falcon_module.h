@@ -6,8 +6,14 @@
 #ifndef _FALCON_MODULE_H
 #define _FALCON_MODULE_H
 
-#include <kroll/kroll.h>
+#ifdef OS_WIN32
+#include <kroll/base.h>
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include <falcon/engine.h>
+#include <kroll/kroll.h>
 
 #include "falcon_api.h"
 #include "falcon_kvm.h"

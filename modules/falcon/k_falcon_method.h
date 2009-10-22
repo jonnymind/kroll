@@ -10,7 +10,7 @@
 namespace kroll
 {
 
-	class KROLL_API KFalconMethod : public KMethod
+	class KFalconMethod : public KMethod
 	{
 
 	public:
