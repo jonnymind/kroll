@@ -33,7 +33,18 @@ namespace kroll
 
 			case FLC_ITEM_ARRAY: return Value::NewObject( new KFalconList( item.asArray() ) );
 			case FLC_ITEM_DICT: return Value::NewObject( new KFalconDict( item.asDict() ) );
-			case FLC_ITEM_OBJECT: return Value::NewObject( new KFalconObject( item.asObjectSafe() ) );
+			case FLC_ITEM_OBJECT:
+				{
+					Falcon::CoreObject* co = item.asObjectSafe();
+					if( co->generator() == FalconModule::Evaluator()->GetKObjectClass() )
+						return static_cast<Falcon::FKObject*>(co)->data();
+					else if( co->generator() == FalconModule::Evaluator()->GetKMethodClass() )
+						return static_cast<Falcon::FKMethod*>(co)->data();
+					else if( co->generator() == FalconModule::Evaluator()->GetKListClass() )
+						return static_cast<Falcon::FKList*>(co)->data();
+				}
+				return Value::NewObject( new KFalconObject( item.asObjectSafe() ) );
+				
 			case FLC_ITEM_FUNC: return Value::NewMethod( new KFalconFunc( item ) );
 			case FLC_ITEM_METHOD: return Value::NewMethod( new KFalconMethod( item ) );
 		}

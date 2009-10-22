@@ -16,61 +16,43 @@ namespace Falcon
 // as wrapped in a falcon class.
 //=====================================================
 
-	class FKObject: public CoreObject
+	FKObject::~FKObject() {}
+
+	bool FKObject::hasProperty( const String &key ) const
 	{
-	public:
-		FKObject( const CoreClass* cls, kroll::SharedValue data ):
-			CoreObject( cls ),
-			m_data( data )
-		{}
+		AutoCString ckey( key );
+		return m_data->ToObject()->HasProperty( ckey.c_str() );
+	}
 
-		FKObject( const FKObject& other ):
-			CoreObject( other ),
-			m_data( other.m_data )
-		{}
+	bool FKObject::setProperty( const String &prop, const Item &value )
+	{
+		AutoCString ckey( prop );
+		kroll::SharedValue v = kroll::FalconUtils::ToKrollValue( value );
+		// In case of problems, this should fire an application specific exception.
+		m_data->ToObject()->Set( ckey.c_str(), v );
 
-		virtual ~FKObject() {}
+		return true;
+	}
 
-		virtual bool hasProperty( const String &key ) const
+	bool FKObject::getProperty( const String &key, Item &ret ) const
+	{
+		AutoCString ckey( key );
+		if ( m_data->ToObject()->HasProperty( ckey.c_str() ) )
 		{
-			AutoCString ckey( key );
-			return m_data->ToObject()->HasProperty( ckey.c_str() );
-		}
-
-		virtual bool setProperty( const String &prop, const Item &value )
-		{
-			AutoCString ckey( prop );
-			kroll::SharedValue v = kroll::FalconUtils::ToKrollValue( value );
-			// In case of problems, this should fire an application specific exception.
-			m_data->ToObject()->Set( ckey.c_str(), v );
-
+			// In case of problems, this should fire an application specific exception
+			kroll::SharedValue v = m_data->ToObject()->Get( ckey.c_str() );
+			kroll::FalconUtils::ToFalconItem( v, ret );
 			return true;
 		}
+		// return one of our properties... or raise an error.
+		return defaultProperty( key, ret );
+	}
 
-		virtual bool getProperty( const String &key, Item &ret ) const
-		{
-			AutoCString ckey( key );
-			if ( m_data->ToObject()->HasProperty( ckey.c_str() ) )
-			{
-				// In case of problems, this should fire an application specific exception
-				kroll::SharedValue v = m_data->ToObject()->Get( ckey.c_str() );
-				kroll::FalconUtils::ToFalconItem( v, ret );
-				return true;
-			}
-			// return one of our properties... or raise an error.
-			return defaultProperty( key, ret );
-		}
+	CoreObject *FKObject::clone() const
+	{
+		return new FKObject( *this );
+	}
 
-		virtual CoreObject *clone() const
-		{
-			return new FKObject( *this );
-		}
-
-		kroll::SharedValue data() { return m_data; }
-
-	private:
-		kroll::SharedValue m_data;
-	};
 
 	CoreObject* KObject_factory( const CoreClass* generator, void* data, bool )
 	{
@@ -85,75 +67,60 @@ namespace Falcon
 // instances as wrapped in a falcon class.
 //=====================================================
 
-	class FKMethod: public CoreObject
+
+	FKMethod::~FKMethod() {}
+
+	bool FKMethod::hasProperty( const String &key ) const
 	{
-	public:
-		FKMethod( const CoreClass* cls, kroll::SharedValue data ):
-			CoreObject( cls ),
-			m_data( data )
-		{}
+		AutoCString ckey( key );
+		return m_data->ToMethod()->HasProperty( ckey.c_str() );
+	}
 
-		FKMethod( const FKMethod& other ):
-			CoreObject( other ),
-			m_data( other.m_data )
-		{}
+	bool FKMethod::setProperty( const String &prop, const Item &value )
+	{
+		AutoCString ckey( prop );
+		kroll::SharedValue v = kroll::FalconUtils::ToKrollValue( value );
+		// In case of problems, this should fire an application specific exception.
+		m_data->ToMethod()->Set( ckey.c_str(), v );
 
-		virtual ~FKMethod() {}
+		return true;
+	}
 
-		virtual bool hasProperty( const String &key ) const
+	bool FKMethod::getProperty( const String &key, Item &ret ) const
+	{
+		Logger::Get("Falcon")->Debug( "getting property" );
+		// prepare a callable method for this method.
+		if ( key == "call__" )
 		{
-			AutoCString ckey( key );
-			return m_data->ToMethod()->HasProperty( ckey.c_str() );
+			Logger::Get("Falcon")->Debug( "getting call__ property" );
+			return defaultProperty( key, ret );
 		}
 
-		virtual bool setProperty( const String &prop, const Item &value )
-		{
-			AutoCString ckey( prop );
-			kroll::SharedValue v = kroll::FalconUtils::ToKrollValue( value );
-			// In case of problems, this should fire an application specific exception.
-			m_data->ToMethod()->Set( ckey.c_str(), v );
+		AutoCString ckey( key );
+		// In case of problems, this should fire an application specific exception
+		kroll::SharedValue v = m_data->ToMethod()->Get( ckey.c_str() );
+		kroll::FalconUtils::ToFalconItem( v, ret );
+		return true;
+	}
 
-			return true;
+	CoreObject *FKMethod::clone() const
+	{
+		return new FKMethod( *this );
+	}
+
+	void FKMethod::call( VMachine* vm )
+	{
+		ArgList args;
+		Logger::Get("Falcon")->Debug( "Calling method with %d values", vm->paramCount() );
+
+		for( int pc = 0; pc < vm->paramCount(); ++pc )
+		{
+			args.push_back( FalconUtils::ToKrollValue( *vm->param(pc) ) );
 		}
 
-		virtual bool getProperty( const String &key, Item &ret ) const
-		{
-			Logger::Get("Falcon")->Debug( "getting property" );
-			// prepare a callable method for this method.
-			if ( key == "call__" )
-			{
-				Logger::Get("Falcon")->Debug( "getting call__ property" );
-				return defaultProperty( key, ret );
-			}
-			
-			AutoCString ckey( key );
-			// In case of problems, this should fire an application specific exception
-			kroll::SharedValue v = m_data->ToMethod()->Get( ckey.c_str() );
-			kroll::FalconUtils::ToFalconItem( v, ret );
-			return true;
-		}
+		FalconUtils::ToFalconItem( m_data->ToMethod()->Call( args ), vm->regA() );
+	}
 
-		virtual CoreObject *clone() const
-		{
-			return new FKMethod( *this );
-		}
-
-		void call( VMachine* vm )
-		{
-			ArgList args;
-			Logger::Get("Falcon")->Debug( "Calling method with %d values", vm->paramCount() );
-			
-			for( int pc = 0; pc < vm->paramCount(); ++pc )
-			{
-				args.push_back( FalconUtils::ToKrollValue( *vm->param(pc) ) );
-			}
-
-			FalconUtils::ToFalconItem( m_data->ToMethod()->Call( args ), vm->regA() );
-		}
-		
-	private:
-		kroll::SharedValue m_data;
-	};
 
 	CoreObject* KMethod_factory( const CoreClass* generator, void* data, bool )
 	{
@@ -176,47 +143,29 @@ namespace Falcon
 //=====================================================
 
 	
-	class FKList: public CoreObject
+	FKList::~FKList() {}
+
+	bool FKList::hasProperty( const String &key ) const
 	{
-	public:
-		FKList( const CoreClass* cls, kroll::SharedValue data ):
-			CoreObject( cls ),
-			m_data( data )
-		{}
+		uint32 pos = 0;
+		return generator()->properties().findKey(key, pos);
+	}
 
-		FKList( const FKList& other ):
-			CoreObject( other ),
-			m_data( other.m_data )
-		{}
+	bool FKList::setProperty( const String &prop, const Item &value )
+	{
+		return false;
+	}
 
-		virtual ~FKList() {}
+	bool FKList::getProperty( const String &key, Item &ret ) const
+	{
+		return defaultProperty( key, ret );
+	}
 
-		bool hasProperty( const String &key ) const
-		{
-			uint32 pos = 0;
-			return generator()->properties().findKey(key, pos);
-		}
+	CoreObject *FKList::clone() const
+	{
+		return new FKList( *this );
+	}
 
-		bool setProperty( const String &prop, const Item &value )
-		{
-			return false;
-		}
-
-		bool getProperty( const String &key, Item &ret ) const
-		{
-			return defaultProperty( key, ret );
-		}
-
-		virtual CoreObject *clone() const
-		{
-			return new FKList( *this );
-		}
-
-		kroll::KList* klist() const { return m_data->ToList(); }
-
-		private:
-			kroll::SharedValue m_data;
-	};
 
 	CoreObject* FKList_factory( const CoreClass* generator, void* data, bool )
 	{
@@ -354,6 +303,7 @@ static void KFObkect_GetPropertyNames( Falcon::VMachine* vm )
 
 		// Add the window global object.
 		self->addGlobal( "window" )->setWKS( true );
+		self->addGlobal( "document" )->setWKS( true );
 		
 		// "%KObject"; the "%" marks it as CPP-private.
 		Symbol* cls_kobject = self->addClass( FALCON_KOBJECT_CLASS_NAME ); 

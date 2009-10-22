@@ -20,6 +20,7 @@
 #include "k_falcon_dict.h"
 #include "falcon_utils.h"
 #include "falcon_module_instance.h"
+#include "falcon_classes.h"
 
 namespace kroll
 {

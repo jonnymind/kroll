@@ -28,6 +28,9 @@ namespace kroll
 		Falcon::InteractiveCompiler* m_intcomp;
 		KVMachine* m_vm;
 		Falcon::ModuleLoader* m_loader;
+		// cached pointers to global items
+		Falcon::Item* m_window;
+		Falcon::Item* m_document;
 		
 		// not necessary, but useful for performance.
 		Falcon::GarbageLock* m_kobj_class;

@@ -39,6 +39,8 @@ namespace kroll
 
 		// Put in the Kroll-glue module
 		m_vm->link( Falcon::krollGlueModule() );
+		m_window = m_vm->findGlobalItem( "window" );
+		m_document = m_vm->findGlobalItem( "document" );
 
 		// get our KObject class instance, so that we can use it later on.
 		Falcon::Item* kobj_cls= m_vm->findWKI( FALCON_KOBJECT_CLASS_NAME );
@@ -100,13 +102,11 @@ namespace kroll
 		SharedKObject windowGlobal = args.GetObject(3);
 
 		Logger *logger = Logger::Get("Falcon");
-		// get the global window object
-		// TODO: cache it globally
-		Falcon::Item* i_window = m_vm->findGlobalItem( "window" );
-
 		// turn into a falcon item
-		FalconUtils::ToFalconItem( Value::NewObject(windowGlobal), *i_window );
-		logger->Debug( "Running falcons script \"%s\"", name );
+		FalconUtils::ToFalconItem( Value::NewObject(windowGlobal), *m_window );
+		FalconUtils::ToFalconItem( windowGlobal->Get("document"), *m_document );
+		
+		logger->Debug( "Running falcon script \"%s\"", name );
 		try
 		{
 			m_intcomp->compileNext( code.c_str() );
