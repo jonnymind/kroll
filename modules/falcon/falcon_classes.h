@@ -30,7 +30,7 @@ namespace Falcon
 		virtual bool getProperty( const String &key, Item &ret ) const;
 		virtual CoreObject *clone() const;
 
-		kroll::SharedValue data() { return m_data; }
+		kroll::SharedValue data() const { return m_data; }
 
 	private:
 		kroll::SharedValue m_data;
@@ -63,8 +63,9 @@ namespace Falcon
 		virtual bool setProperty( const String &prop, const Item &value );
 		virtual bool getProperty( const String &key, Item &ret ) const;
 		virtual CoreObject *clone() const;
-
 		void call( VMachine* vm );
+
+		kroll::SharedValue data() const { return m_data; }
 
 	private:
 		kroll::SharedValue m_data;
@@ -98,6 +99,8 @@ namespace Falcon
 		virtual bool getProperty( const String &key, Item &ret ) const;
 		virtual CoreObject *clone() const;
 		kroll::KList* klist() const { return m_data->ToList(); }
+
+		kroll::SharedValue data() const { return m_data; }
 
 		private:
 			kroll::SharedValue m_data;
