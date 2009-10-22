@@ -17,7 +17,7 @@ namespace kroll
 		This can't be done on Falcon Functions; we provide a "name"
 		property just as a simple utility.
 	*/
-	class KROLL_API KFalconFunc : public KMethod
+	class KFalconFunc : public KMethod
 	{
 
 	public:

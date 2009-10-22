@@ -10,7 +10,7 @@
 namespace kroll
 {
 
-	class KROLL_API KFalconList : public KList
+	class KFalconList : public KList
 	{
 
 	public:
