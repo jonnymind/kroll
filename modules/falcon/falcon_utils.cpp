@@ -17,7 +17,7 @@ namespace kroll
 		throw ve;
 	}
 
-	SharedValue FalconUtils::ToKrollValue(const Falcon::Item& item )
+	KValueRef FalconUtils::ToKrollValue(const Falcon::Item& item )
 	{
 		switch( item.type() )
 		{
@@ -52,7 +52,7 @@ namespace kroll
 		return Value::Undefined;
 	}
 
-	void FalconUtils::ToFalconItem( SharedValue value, Falcon::Item& item )
+	void FalconUtils::ToFalconItem( KValueRef value, Falcon::Item& item )
 	{
 		if (value->IsBool())
 		{

@@ -33,7 +33,7 @@ namespace kroll
 		logger->Debug( "Stopping Falcon module" );
 
 		
-		SharedKObject global = this->host->GetGlobalObject();
+		KObjectRef global = this->host->GetGlobalObject();
 		global->Set("Falcon", Value::Undefined);
 		Script::GetInstance()->RemoveScriptEvaluator(this->binding);
 		logger->Debug( "Binding count at cleanup: %d", this->binding->referenceCount() );
@@ -50,7 +50,7 @@ namespace kroll
 
 	void FalconModule::InitializeBinding()
 	{
-		SharedKObject global = this->host->GetGlobalObject();
+		KObjectRef global = this->host->GetGlobalObject();
 		evaluator_ = new FalconEvaluator();
 		this->binding = evaluator_;
 		global->Set("Falcon", Value::NewObject(this->binding));

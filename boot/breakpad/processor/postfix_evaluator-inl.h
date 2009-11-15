@@ -38,6 +38,7 @@
 #define PROCESSOR_POSTFIX_EVALUATOR_INL_H__
 
 
+#include <stdio.h>
 #include <sstream>
 
 #include "processor/postfix_evaluator.h"

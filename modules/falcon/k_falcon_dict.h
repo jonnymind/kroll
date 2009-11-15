@@ -22,8 +22,8 @@ public:
 	KFalconDict( Falcon::CoreDict* co );
 	virtual ~KFalconDict();
 
-	virtual void Set(const char *name, SharedValue value);
-	virtual SharedValue Get(const char *name);
+	virtual void Set(const char *name, KValueRef value);
+	virtual KValueRef Get(const char *name);
 	virtual SharedStringList GetPropertyNames();
 
 	/** Returns the Falcon Object associated with this core object. */
@@ -38,7 +38,7 @@ public:
 	 *  @param other the object to test
 	 *  @returns true if objects have reference equality, false otherwise
 	 */
-	virtual bool Equals(SharedKObject other);
+	virtual bool Equals(KObjectRef other);
 
 private:
 	Falcon::CoreDict* m_cd;

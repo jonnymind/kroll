@@ -14,7 +14,7 @@ namespace Falcon
 	class FKObject: public CoreObject
 	{
 	public:
-		FKObject( const CoreClass* cls, kroll::SharedValue data ):
+      FKObject( const CoreClass* cls, kroll::KValueRef data ):
 			CoreObject( cls ),
 			m_data( data )
 		{}
@@ -30,10 +30,10 @@ namespace Falcon
 		virtual bool getProperty( const String &key, Item &ret ) const;
 		virtual CoreObject *clone() const;
 
-		kroll::SharedValue data() const { return m_data; }
+		kroll::KValueRef data() const { return m_data; }
 
 	private:
-		kroll::SharedValue m_data;
+		kroll::KValueRef m_data;
 	};
 
 
@@ -48,7 +48,7 @@ namespace Falcon
 	class FKMethod: public CoreObject
 	{
 	public:
-		FKMethod( const CoreClass* cls, kroll::SharedValue data ):
+		FKMethod( const CoreClass* cls, kroll::KValueRef data ):
 			CoreObject( cls ),
 			m_data( data )
 		{}
@@ -65,10 +65,10 @@ namespace Falcon
 		virtual CoreObject *clone() const;
 		void call( VMachine* vm );
 
-		kroll::SharedValue data() const { return m_data; }
+		kroll::KValueRef data() const { return m_data; }
 
 	private:
-		kroll::SharedValue m_data;
+		kroll::KValueRef m_data;
 	};
 
 
@@ -82,7 +82,7 @@ namespace Falcon
 	class FKList: public CoreObject
 	{
 	public:
-		FKList( const CoreClass* cls, kroll::SharedValue data ):
+		FKList( const CoreClass* cls, kroll::KValueRef data ):
 			CoreObject( cls ),
 			m_data( data )
 		{}
@@ -100,10 +100,10 @@ namespace Falcon
 		virtual CoreObject *clone() const;
 		kroll::KList* klist() const { return m_data->ToList(); }
 
-		kroll::SharedValue data() const { return m_data; }
+		kroll::KValueRef data() const { return m_data; }
 
 		private:
-			kroll::SharedValue m_data;
+			kroll::KValueRef m_data;
 	};
 }
 

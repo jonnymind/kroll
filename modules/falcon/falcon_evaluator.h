@@ -17,8 +17,8 @@ namespace kroll
 	public:
 		FalconEvaluator();
 		virtual ~FalconEvaluator();
-		void Evaluate(const ValueList& args, SharedValue result);
-		void CanEvaluate(const ValueList& args, SharedValue result);
+		void Evaluate(const ValueList& args, KValueRef result);
+		void CanEvaluate(const ValueList& args, KValueRef result);
 
 		Falcon::CoreClass* GetKObjectClass() { return m_kobj_class->item().asClass(); }
 		Falcon::CoreClass* GetKMethodClass() { return m_kmth_class->item().asClass(); }

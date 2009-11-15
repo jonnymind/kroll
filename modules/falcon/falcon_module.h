@@ -60,7 +60,7 @@ namespace kroll
 		}
 		
 	private:
-		SharedKObject binding;
+		KObjectRef binding;
 		static FalconModule *instance_;
 		static FalconEvaluator *evaluator_;
 		DISALLOW_EVIL_CONSTRUCTORS(FalconModule);

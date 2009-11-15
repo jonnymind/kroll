@@ -19,7 +19,7 @@ namespace kroll {
 		delete m_gl;
 	}
 
-	void KFalconDict::Set(const char *name, SharedValue value)
+	void KFalconDict::Set(const char *name, KValueRef value)
 	{
 		try
 		{
@@ -33,7 +33,7 @@ namespace kroll {
 		}
 	}
 
-	SharedValue KFalconDict::Get(const char *name)
+	KValueRef KFalconDict::Get(const char *name)
 	{
 		Falcon::Item item;
 		try
@@ -68,7 +68,7 @@ namespace kroll {
 	}
 
 
-	bool KFalconDict::Equals( SharedKObject other )
+	bool KFalconDict::Equals( KObjectRef other )
 	{
 		AutoPtr<KFalconDict> falconOther = other.cast<KFalconDict>();
 		if (falconOther.isNull())

@@ -80,7 +80,7 @@ namespace kroll
 	}
 
 
-	void FalconEvaluator::CanEvaluate(const ValueList& args, SharedValue result)
+	void FalconEvaluator::CanEvaluate(const ValueList& args, KValueRef result)
 	{
 		args.VerifyException("canEvaluate", "s");
 		
@@ -92,14 +92,14 @@ namespace kroll
 		}
 	}
 	
-	void FalconEvaluator::Evaluate(const ValueList& args, SharedValue result)
+	void FalconEvaluator::Evaluate(const ValueList& args, KValueRef result)
 	{
 		args.VerifyException("evaluate", "s s s o");
 
 		//const char *mimeType = args.GetString(0).c_str();
 		const char *name = args.GetString(1).c_str();
 		std::string code = args.GetString(2);
-		SharedKObject windowGlobal = args.GetObject(3);
+		KObjectRef windowGlobal = args.GetObject(3);
 
 		Logger *logger = Logger::Get("Falcon");
 		// turn into a falcon item

@@ -14,10 +14,10 @@ namespace kroll
 	class FalconUtils
 	{
 	public:
-		static SharedValue ToKrollValue(const Falcon::Item& value);
+		static KValueRef ToKrollValue(const Falcon::Item& value);
 
 		/** Using an item passed by ref, we can often spare a useless copy operation. */
-		static void ToFalconItem( SharedValue value, Falcon::Item& item );
+		static void ToFalconItem( KValueRef value, Falcon::Item& item );
 
 			/** Throws a ValueError extracting and dereferencing the Falcon Error. */
 		static void ManageError( Falcon::Error* e );

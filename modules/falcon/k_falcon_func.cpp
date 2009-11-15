@@ -27,7 +27,7 @@ namespace kroll
 		delete m_glFunc;
 	}
 
-	SharedValue KFalconFunc::Call(const ValueList& args)
+	KValueRef KFalconFunc::Call(const ValueList& args)
 	{
 		//TODO -- get the evaluator VM
 		Falcon::VMachine* vm = Falcon::VMachine::getCurrent();
@@ -51,13 +51,13 @@ namespace kroll
 		return FalconUtils::ToKrollValue( vm->regA() );
 	}
 
-	void KFalconFunc::Set(const char *name, SharedValue value)
+	void KFalconFunc::Set(const char *name, KValueRef value)
 	{
 		throw ValueException::FromString( "Cannot set property on Falcon Function object." );
 	}
 
 
-	SharedValue KFalconFunc::Get(const char *name)
+	KValueRef KFalconFunc::Get(const char *name)
 	{
 		if( std::string( name ) == "name" )
 		{

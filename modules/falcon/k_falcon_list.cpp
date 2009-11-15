@@ -21,7 +21,7 @@ namespace kroll
 		delete m_gl;
 	}
 
-	void KFalconList::Append(SharedValue value)
+	void KFalconList::Append(KValueRef value)
 	{
 		Falcon::Item item;
 		FalconUtils::ToFalconItem( value, item );
@@ -33,7 +33,7 @@ namespace kroll
 		return m_ca->length();
 	}
 	
-	SharedValue KFalconList::At(unsigned int index)
+	KValueRef KFalconList::At(unsigned int index)
 	{
 		if ( m_ca->length() <= index )
 		{
@@ -42,7 +42,7 @@ namespace kroll
 		return FalconUtils::ToKrollValue( m_ca->at( index ) );
 	}
 	
-	void KFalconList::SetAt(unsigned int index, SharedValue value)
+	void KFalconList::SetAt(unsigned int index, KValueRef value)
 	{
 		if ( m_ca->length() <= index )
 		{
@@ -63,12 +63,12 @@ namespace kroll
 		return true;
 	}
 
-	void KFalconList::Set(const char *name, SharedValue value)
+	void KFalconList::Set(const char *name, KValueRef value)
 	{
 		// For now, nothing.
 	}
 	
-	SharedValue KFalconList::Get(const char *name)
+	KValueRef KFalconList::Get(const char *name)
 	{
 		// For now nothing
 		return Value::NewNull();

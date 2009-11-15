@@ -17,14 +17,14 @@ namespace kroll
 		KFalconList( Falcon::CoreArray* ca );
 		virtual ~KFalconList();
 
-		virtual void Append(SharedValue value);
+		virtual void Append(KValueRef value);
 		virtual unsigned int Size();
-		virtual SharedValue At(unsigned int index);
-		virtual void SetAt(unsigned int index, SharedValue value);
+		virtual KValueRef At(unsigned int index);
+		virtual void SetAt(unsigned int index, KValueRef value);
 		virtual bool Remove(unsigned int index);
 
-		virtual void Set(const char *name, SharedValue value);
-		virtual SharedValue Get(const char *name);
+		virtual void Set(const char *name, KValueRef value);
+		virtual KValueRef Get(const char *name);
 		virtual SharedStringList GetPropertyNames();
 
 		Falcon::CoreArray* ToFalcon() { return m_ca; }

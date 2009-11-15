@@ -25,7 +25,7 @@ namespace kroll
 		delete m_glMethod;
 	}
 	
-	SharedValue KFalconMethod::Call(const ValueList& args)
+	KValueRef KFalconMethod::Call(const ValueList& args)
 	{
 		//TODO -- get the evaluator VM
 		Falcon::VMachine* vm = Falcon::VMachine::getCurrent();
@@ -49,7 +49,7 @@ namespace kroll
 		return FalconUtils::ToKrollValue( vm->regA() );
 	}
 	
-	void KFalconMethod::Set(const char *name, SharedValue value)
+	void KFalconMethod::Set(const char *name, KValueRef value)
 	{
 		try {
 			Falcon::Item itm;
@@ -63,7 +63,7 @@ namespace kroll
 	}
 
 	
-	SharedValue KFalconMethod::Get(const char *name)
+	KValueRef KFalconMethod::Get(const char *name)
 	{
 		Falcon::Item itm;
 		

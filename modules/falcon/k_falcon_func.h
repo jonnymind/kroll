@@ -24,9 +24,9 @@ namespace kroll
 		KFalconFunc( const Falcon::Item& fmethod );
 		virtual ~KFalconFunc();
 
-		virtual SharedValue Call(const ValueList& args);
-		virtual void Set(const char *name, SharedValue value);
-		virtual SharedValue Get(const char *name);
+		virtual KValueRef Call(const ValueList& args);
+		virtual void Set(const char *name, KValueRef value);
+		virtual KValueRef Get(const char *name);
 		virtual SharedStringList GetPropertyNames();
 
 		Falcon::Item& ToFalcon() { return m_glFunc->item(); }

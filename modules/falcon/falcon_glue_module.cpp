@@ -27,7 +27,7 @@ namespace Falcon
 	bool FKObject::setProperty( const String &prop, const Item &value )
 	{
 		AutoCString ckey( prop );
-		kroll::SharedValue v = kroll::FalconUtils::ToKrollValue( value );
+		kroll::KValueRef v = kroll::FalconUtils::ToKrollValue( value );
 		// In case of problems, this should fire an application specific exception.
 		m_data->ToObject()->Set( ckey.c_str(), v );
 
@@ -40,7 +40,7 @@ namespace Falcon
 		if ( m_data->ToObject()->HasProperty( ckey.c_str() ) )
 		{
 			// In case of problems, this should fire an application specific exception
-			kroll::SharedValue v = m_data->ToObject()->Get( ckey.c_str() );
+			kroll::KValueRef v = m_data->ToObject()->Get( ckey.c_str() );
 			kroll::FalconUtils::ToFalconItem( v, ret );
 			return true;
 		}
@@ -56,7 +56,7 @@ namespace Falcon
 
 	CoreObject* KObject_factory( const CoreClass* generator, void* data, bool )
 	{
-		kroll::SharedValue* vdata = (kroll::SharedValue*) data;
+		kroll::KValueRef* vdata = (kroll::KValueRef*) data;
 		return new FKObject( generator, *vdata );
 	}
 
@@ -79,7 +79,7 @@ namespace Falcon
 	bool FKMethod::setProperty( const String &prop, const Item &value )
 	{
 		AutoCString ckey( prop );
-		kroll::SharedValue v = kroll::FalconUtils::ToKrollValue( value );
+		kroll::KValueRef v = kroll::FalconUtils::ToKrollValue( value );
 		// In case of problems, this should fire an application specific exception.
 		m_data->ToMethod()->Set( ckey.c_str(), v );
 
@@ -98,7 +98,7 @@ namespace Falcon
 
 		AutoCString ckey( key );
 		// In case of problems, this should fire an application specific exception
-		kroll::SharedValue v = m_data->ToMethod()->Get( ckey.c_str() );
+		kroll::KValueRef v = m_data->ToMethod()->Get( ckey.c_str() );
 		kroll::FalconUtils::ToFalconItem( v, ret );
 		return true;
 	}
@@ -124,7 +124,7 @@ namespace Falcon
 
 	CoreObject* KMethod_factory( const CoreClass* generator, void* data, bool )
 	{
-		kroll::SharedValue* vdata = (kroll::SharedValue*) data;
+		kroll::KValueRef* vdata = (kroll::KValueRef*) data;
 		return new FKMethod( generator, *vdata );
 	}
 
@@ -169,7 +169,7 @@ namespace Falcon
 
 	CoreObject* FKList_factory( const CoreClass* generator, void* data, bool )
 	{
-		kroll::SharedValue* vdata = (kroll::SharedValue*) data;
+		kroll::KValueRef* vdata = (kroll::KValueRef*) data;
 		return new FKList( generator, *vdata );
 	}
 
