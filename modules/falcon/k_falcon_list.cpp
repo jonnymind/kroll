@@ -10,7 +10,7 @@ namespace kroll
 {
 
 	KFalconList::KFalconList( Falcon::CoreArray* ca ):
-		KList( "KFalconList" ),
+		KList( "Falcon.KFalconList" ),
 		m_ca( ca )
 	{
 		m_gl = new Falcon::GarbageLock( Falcon::Item(ca) );
@@ -37,20 +37,58 @@ namespace kroll
 	{
 		if ( m_ca->length() <= index )
 		{
-			throw ValueException::FromFormat( "KFalconList::At out of range( %d/%d )", index, m_ca->length() );
+			return Value::Undefined;
 		}
 		return FalconUtils::ToKrollValue( m_ca->at( index ) );
 	}
-	
+
+
+	void KFalconList::Set(const char *name, KValueRef value)
+	{
+		// Check for integer value as name
+		int index = -1;
+		if (KList::IsInt(name) && ((index = atoi(name)) >= 0))
+		{
+			this->SetAt((unsigned int) index, value);
+		}
+		else
+		{
+			//this->object->Set(name, value);
+		}
+	}
+
 	void KFalconList::SetAt(unsigned int index, KValueRef value)
 	{
-		if ( m_ca->length() <= index )
-		{
-			throw ValueException::FromFormat( "KFalconList::SetAt out of range( %d/%d )", index, m_ca->length() );
-		}
-
+		if ( index >= m_ca->length() )
+			m_ca->resize( index+1 );
+		
 		FalconUtils::ToFalconItem( value, m_ca->at( index ) );
 	}
+
+	KValueRef KFalconList::Get(const char *name)
+	{
+		if (KList::IsInt(name))
+		{
+			unsigned int index = (unsigned int) atoi(name);
+			if (index >= 0)
+				return this->At(index);
+		}
+		//return object->Get(name);
+		return Value::Undefined;
+	}
+
+	SharedStringList KFalconList::GetPropertyNames()
+	{
+		SharedStringList property_names; // = object->GetPropertyNames();
+		for (size_t i = 0; i < this->Size(); i++)
+		{
+			std::string name = KList::IntToChars(i);
+			property_names->push_back(new std::string(name));
+		}
+
+		return property_names;
+	}
+
 	
 	bool KFalconList::Remove(unsigned int index)
 	{
@@ -63,23 +101,15 @@ namespace kroll
 		return true;
 	}
 
-	void KFalconList::Set(const char *name, KValueRef value)
+	bool KFalconList::Equals(KObjectRef other)
 	{
-		// For now, nothing.
-	}
-	
-	KValueRef KFalconList::Get(const char *name)
-	{
-		// For now nothing
-		return Value::NewNull();
-	}
-	
-	SharedStringList KFalconList::GetPropertyNames()
-	{
-		// For now nothing
-		SharedStringList names(new StringList());
-		return names;
-	}
+		AutoPtr<KFalconList> lOther = other.cast<KFalconList>();
 
+		// This is not a Python object
+		if (lOther.isNull())
+			return false;
+
+		return lOther->ToFalcon() == this->ToFalcon();
+	}
 
 }

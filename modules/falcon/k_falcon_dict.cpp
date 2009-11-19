@@ -24,8 +24,15 @@ namespace kroll {
 		try
 		{
 			Falcon::Item item;
+			
+			Falcon::CoreString* pname = new Falcon::CoreString( name );
+			if( *pname == "length" )
+			{
+				return;
+			}
+			
 			FalconUtils::ToFalconItem( value, item );
-			m_cd->writeProperty( name, item );
+			m_cd->writeIndex( pname, item );
 		}
 		catch( Falcon::Error *e )
 		{
@@ -38,7 +45,13 @@ namespace kroll {
 		Falcon::Item item;
 		try
 		{
-			m_cd->readProperty( name, item );
+			Falcon::String pname(name);
+			if( pname == "length" )
+			{
+				item = (Falcon::int64) m_cd->length();
+			}
+			else
+				m_cd->readIndex( const_cast<Falcon::String*>(&pname), item );
 		}
 		catch( Falcon::Error *e )
 		{
@@ -63,7 +76,7 @@ namespace kroll {
 			}
 			iter.next();
 		}
-
+		names->push_back( new std::string("length") );
 		return names;
 	}
 

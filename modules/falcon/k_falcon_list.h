@@ -26,8 +26,10 @@ namespace kroll
 		virtual void Set(const char *name, KValueRef value);
 		virtual KValueRef Get(const char *name);
 		virtual SharedStringList GetPropertyNames();
-
+		virtual bool Equals(KObjectRef other);
+		
 		Falcon::CoreArray* ToFalcon() { return m_ca; }
+
 
 	public:
 		Falcon::CoreArray* m_ca;
