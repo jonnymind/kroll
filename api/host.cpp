@@ -294,128 +294,6 @@ namespace kroll
 	}
 
 	/**
-	 * Copy a module's application-specific resources into the currently running app
-	 */
-	void Host::CopyModuleAppResources(std::string& modulePath)
-	{
-		this->logger->Trace("CopyModuleAppResources: %s", modulePath.c_str());
-		std::string appDir = this->application->path;
-		Path appPath(this->application->path);
-
-		try
-		{
-			Path moduleDir(modulePath);
-			moduleDir = moduleDir.parent();
-			std::string mds(moduleDir.toString());
-
-			const char* platform = this->GetPlatform();
-			std::string resources_dir = FileUtils::Join(mds.c_str(), "AppResources", 0);
-			std::string plt_resources_dir = FileUtils::Join(resources_dir.c_str(), platform, 0);
-			std::string all_resources_dir = FileUtils::Join(resources_dir.c_str(), "all", 0);
-			File platformAppResourcesDir(plt_resources_dir);
-			File allAppResourcesDir(all_resources_dir);
-
-			if (platformAppResourcesDir.exists()
-				&& platformAppResourcesDir.isDirectory())
-			{
-
-				std::vector<File> files;
-				platformAppResourcesDir.list(files);
-				for (size_t i = 0; i < files.size(); i++)
-				{
-					File f = files.at(i);
-					Path targetPath(appPath, Path(Path(f.path()).getBaseName()));
-					File targetFile(targetPath);
-					this->logger->Trace("target: %s", targetFile.path().c_str());
-					if (!targetFile.exists())
-					{
-						this->logger->Trace("Copying : %s to %s", f.path().c_str(), appDir.c_str());
-						f.copyTo(appDir);
-					}
-					else
-					{
-						this->logger->Trace("SKIP Copying : %s to %s", f.path().c_str(), appDir.c_str());
-					}
-				}
-			}
-
-			if (allAppResourcesDir.exists()
-				&& allAppResourcesDir.isDirectory())
-			{
-				std::vector<File> files;
-				allAppResourcesDir.list(files);
-				for (size_t i = 0; i < files.size(); i++)
-				{
-					File f = files.at(i);
-					Path targetPath(appPath, Path(Path(f.path()).getBaseName()));
-					File targetFile(targetPath);
-					this->logger->Trace("target: %s", targetFile.path().c_str());
-					if (!targetFile.exists())
-					{
-						this->logger->Trace("Copying: %s to %s", f.path().c_str(), appDir.c_str());
-						f.copyTo(appDir);
-					}
-					else
-					{
-						this->logger->Trace("SKIP Copying : %s to %s", f.path().c_str(), appDir.c_str());
-					}
-				}
-			}
-		}
-		catch (Poco::Exception &exc)
-		{
-			// Handle..
-		}
-	}
-
-	/**
-	 * Read / process a module's manifest file
-	*/
-	void Host::ReadModuleManifest(std::string& modulePath)
-	{
-		Poco::Path manifestPath(modulePath);
-		Poco::Path moduleTopDir = manifestPath.parent();
-
-		manifestPath = Poco::Path(FileUtils::Join(moduleTopDir.toString().c_str(), "manifest", 0));
-
-		Poco::File manifestFile(manifestPath);
-		if (manifestFile.exists())
-		{
-			this->logger->Trace("Reading manifest for module: %s", manifestPath.toString().c_str());
-			Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> manifest = new Poco::Util::PropertyFileConfiguration(manifestFile.path());
-
-			if (manifest->hasProperty("libpath"))
-			{
-				std::string libPath = manifest->getString("libpath");
-				Poco::StringTokenizer t(libPath, ",", Poco::StringTokenizer::TOK_TRIM);
-	#if defined(OS_WIN32)
-				std::string libPathEnv = "PATH";
-	#elif defined(OS_OSX)
-				std::string libPathEnv = "DYLD_LIBRARY_PATH";
-	#elif defined(OS_LINUX)
-				std::string libPathEnv = "LD_LIBRARY_PATH";
-	#endif
-				std::string newLibPath;
-
-				if (Environment::has(libPathEnv))
-				{
-					newLibPath = Environment::get(libPathEnv);
-				}
-
-				for (size_t i = 0; i < t.count(); i++)
-				{
-					std::string lib = t[i];
-					newLibPath = FileUtils::Join(moduleTopDir.toString().c_str(), lib.c_str(), 0) +
-						KR_LIB_SEP + newLibPath;
-				}
-
-				this->logger->Debug("%s=%s", libPathEnv.c_str(), newLibPath.c_str());
-				Environment::set(libPathEnv, newLibPath);
-			}
-		}
-	}
-
-	/**
 	 * Load a modules from a path given a module provider.
 	 * @param path Path to the module to attempt to load.
 	 * @param provider The provider to attempt to load with.
@@ -436,8 +314,6 @@ namespace kroll
 		try
 		{
 			logger->Debug("Loading module: %s", path.c_str());
-			this->CopyModuleAppResources(path);
-			this->ReadModuleManifest(path);
 			module = provider->CreateModule(path);
 			module->SetProvider(provider); // set the provider
 			module->Initialize();

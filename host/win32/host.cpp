@@ -62,6 +62,14 @@ namespace kroll
 
 	bool Win32Host::Start()
 	{
+		// Windows DLLs often load libraries dynamically via LoadLibrary and expect
+		// dependencies to be on the DLL search path. Thus we really can't restore
+		// the original path here if we want things to continue working properly.
+		// This shouldn't be too much of an issue either, as long as programs that
+		// we launch rely on the safe dll search path.
+		// string origPath(EnvironmentUtils::Get("KR_ORIG_PATH"));
+		// EnvironmentUtils::Set("PATH", origPath);
+
 		Host::Start();
 		mainThreadId = GetCurrentThreadId();
 		return true;
@@ -103,8 +111,9 @@ namespace kroll
 
 	Module* Win32Host::CreateModule(std::string& path)
 	{
-		std::wstring widePath = UTF8ToWide(path);
-		HMODULE module = LoadLibraryW(widePath.c_str());
+		std::wstring widePath(UTF8ToWide(path));
+		HMODULE module = LoadLibraryExW(widePath.c_str(),
+			NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 
 		if (!module)
 		{
@@ -121,8 +130,7 @@ namespace kroll
 				"Couldn't find ModuleCreator entry point for %s\n", path.c_str());
 		}
 
-		std::string dir = FileUtils::GetDirectory(path);
-		return create(this, dir.c_str());
+		return create(this, FileUtils::GetDirectory(path).c_str());
 	}
 
 	bool Win32Host::IsMainThread()
@@ -194,7 +202,7 @@ extern "C"
 #ifndef DEBUG
 		// only create a debug console when not compiled in debug mode 
 		// otherwise, it should be autocreated
-		if (host->IsDebuggingEnabled())
+		if (host->DebugModeEnabled())
 		{
 			RedirectIOToConsole();
 		}
