@@ -31,7 +31,7 @@ namespace kroll
 				return Value::NewString( cstr.c_str() ); // actually, transfroms to UTF8
 			}
 
-			case FLC_ITEM_ARRAY: return Value::NewObject( new KFalconList( item.asArray() ) );
+			case FLC_ITEM_ARRAY: return Value::NewList( new KFalconList( item.asArray() ) );
 			case FLC_ITEM_DICT: return Value::NewObject( new KFalconDict( item.asDict() ) );
 			case FLC_ITEM_OBJECT:
 				{

@@ -53,7 +53,16 @@ namespace kroll
 		}
 		else
 		{
-			//this->object->Set(name, value);
+			try
+			{
+				Falcon::Item ivalue;
+				FalconUtils::ToFalconItem( value, ivalue );
+				this->m_ca->writeProperty(name, ivalue);
+			}
+			catch( Falcon::Error* e )
+			{
+				e->decref();
+			}
 		}
 	}
 
@@ -73,7 +82,23 @@ namespace kroll
 			if (index >= 0)
 				return this->At(index);
 		}
-		//return object->Get(name);
+
+		Falcon::String sname(name);
+		
+		if( sname == "length" )
+			return  Value::NewDouble( (double) this->m_ca->length() );
+		
+		try
+		{
+			Falcon::Item prop;
+			this->m_ca->readProperty(name, prop);
+			return FalconUtils::ToKrollValue( prop );
+		}
+		catch( Falcon::Error* e )
+		{
+			e->decref();
+		}
+		
 		return Value::Undefined;
 	}
 
@@ -85,6 +110,8 @@ namespace kroll
 			std::string name = KList::IntToChars(i);
 			property_names->push_back(new std::string(name));
 		}
+
+		property_names->push_back( new std::string("length") );
 
 		return property_names;
 	}

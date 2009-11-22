@@ -14,6 +14,9 @@ namespace kroll
 	FalconEvaluator::FalconEvaluator()
 		: StaticBoundObject("Falcon")
 	{
+		Logger *logger = Logger::Get("Falcon");
+		logger->Debug( "Creating the Falcon Evaluator" );
+		
 		/**
 		 * @tiapi(method=True,name=Falcon.canEvaluate,since=0.7)
 		 * @tiarg[String, mimeType] Code mime type
